@@ -1,0 +1,279 @@
+* v.3.0.0
+
+* v.2.2 (TAG v.2.2)
+   - main developemnt repository migrated to GitHub, the sourceforge SVN
+   will be no longer updated. GOTO https://github.com/fastflow/fastflow
+   - bugfix
+   - Added TAG v.2.2
+* v.2.1.3  
+   - introduced a the possibility to add a "manager channel" in the farm emitter for reconfiguring farm's workers (see tests/test_multi_output5.cpp)
+   - the initial barrier can be avoided by undefining the FF_INITIAL_BARRIER define in config.hpp
+   - added makeFarm, makePipe, makeMap, makeMasterWorker, ...
+   - move constructor added in several classes (yet to be completed)
+   - Divide&Conquer pattern implementation (DAC)
+   - ffStats produces energy consumption statistics by using Mammut (MAchine Micro Management UTilities -- http://danieledesensi.github.io/mammut/)
+   - multi-input/output node management improved
+   - improved REPARA layer
+* v.2.1.2 
+   - possibility to switch between BLOCKING and NON-BLOCKING mode at run-time
+   - minor improvements for the OpenCL support
+   - minor enhancement of the fastflow statistics
+   - improved REPARA KERNEL LAYER support
+* v.2.1.1  (not released)
+   - minor fixes
+* v.2.1.0
+   - improved cmake compilation
+   - ff_tpcnode and ff_tpcallocator added
+   - added FPGA and DSP support through the ThreadPoolComposer (TPC) framework
+     developed by Andreas Koch's group at Technical University of Darmstadt (TUD). 
+* v.2.0.9 (not released)
+   - removed almost all explicit atomic operations based on assembler code and added 
+     support to C++11 atomic operations
+   - nodeInit and nodeEnd added in the ff_node class as virtual methods
+   - added ff_selectNode, a simple pattern for selecting between different ff_node
+   - stencilReduceOCL used for map, reduce and map-reduce
+   - OpenCL support completely re-implemented
+* 10/06/15 - v.2.0.8
+   - added BLOCKING_MODE compile time optione. Now it is possible to select 
+     a blocking run-time. The default mode is non-blocking.
+* - v.2.0.7 (not released)
+   - new high level interface for pipeline and farm: ff_Pipe, ff_Farm
+   - revised ff_taskf pattern
+   - added some new tests
+* 15/11/14 - v.2.0.6
+   - removed warnings when compiling with clang
+   - fixed a problem in the ff_mapOCL
+   - introduced "explicit" for some constructors in order to prevent the compiler
+     to use implicit conversions
+   - fixed problems in the fftree usage   
+* 22/08/14 - v.2.0.5
+   - added the possibility to select the spinBarrier barrier in the parallel-for pattern (by default is enabled blocking barrier)
+   - revised version of OpenCL patterns (still experimental)
+   - OpenCL map/reduce/mapreduce patters are now in the mapOCL.hpp file
+   - spinBarrier::barrierSetup revised
+   - *** changed 'thaw' semantic ***. 
+     If the function is called and the current thread is not in the frozen 
+     state, then the thread will not be put to sleep when it reaches 
+     the next freezing point.
+   - introduced the ff_taskf pattern (first non-recursive version)
+   - moved some code from mdf.hpp to tasks_internals.hpp
+   - if set_scheduling_ondemand is called with 0 as parameter then the 
+     scheduling policy is NOT set to ondemand (i.e. the value should be >=1).
+   - introduced ff_minode_t and ff_monode_t, changed the interface (now typed)
+     of the ff_Map<S,T>
+   - introduced ff_node_t a wrapper template class around the ff_node class
+   - the ff_send_out now works also inside the Emitter and Collector of the 
+     ordered farm (ofarm)
+   - removed FF_PIPE macros
+   - if spinWait is set to true in the parallel for, than spinBarrier is used as loop barrier
+   - removed barrier implementation from node.hpp and created a new file barrier.hpp
+   - fixed a bug in the init_data_static function (ParallelFor related)
+   - fixed some problems appearing when remove_collector is called
+   - an ff_minode can be used in place of the ff_node (i.e. when there is no need to 
+     use an ff_minode, indeed) 
+   - first version of the ParallelForPipeReduce pattern
+   - fixed problem with run_then_freeze for the ff_minode and ff_monode
+* 24/01/14 - v.2.0.4
+   - poolEvolution interface improved
+   - introduced the threadPause() method in the ParallelFor/Reduce patterns. 
+     It may be used to  put threads to sleep when the spinwait flag is set 
+     and the parallel for is not   used for a while
+   - separated parallel_for_internals.hpp and parallel_for.hpp 
+   - added the possibility to control the grain size in the static scheduling 
+     policy of the ParallelFor(Reduce) pattern(s)
+   - ff_node::eosnotify interface changed: 
+       virtual void eosnotify(int id=-1) --> virtual void eosnotify(ssize_t id=-1)
+   - added the poolEvolutionCUDA pattern with some simple tests (beta version)
+   - added the poolEvolution pattern with some simple tests (beta version)
+   - stencilReduceCUDA added 
+   - moved stencil.hpp to stencilReduce.hpp
+* 27/01/14 - v.2.0.3
+   - introduced GO_OUT: a new reserved message (see config.hpp)
+   - optimized ParallelFor and ParallelReduce computation when executed inside
+     a serial loop
+   - changed the Barrier implementation (spinBarrier still the same)
+   - added the ff_realNumCores() and the ff_numSockets() utility functions
+   - a new lock-free task scheduling for the ParallelFor has been implemented. 
+     The new scheduling policy is used when the scheduler thread (i.e. farm's emitter 
+     thread) is not being started. This scheduling may be enabled at compile time 
+     by compiling with the flag -DNO_PARFOR_SCHEDULER_THREAD or at run-time by  
+     calling ParallelFor::disableScheduler.
+   - added atomic_flag-based spin-lock (only for C++11-compliant compilers) 
+   - defined ParallelFor and ParallelForReduce classes
+   - removed initial underscore in the preprocessor conditional guards in 
+     order to be compliant to the C++ standard
+   - more work on parallel_for pattern to avoid starting the scheduler thread
+     when there are not enough cores
+   - fixed bug in the forall_Scheduler::init_data method
+   - added the possibility to freeze and thaw all farm threads and then 
+     restart a lower number of workers in a farm having a collector thread.
+     (see tests/test_stopstartall.cpp)
+   - fixed an issue in the ofarm skeleton
+   - ParallelForReduce optimized for the case when it is called multiple times 
+     in a sequential loop
+   - fixed possible node termination problem (in case the freezing flag was set)
+   - commented out the optimization heuristic in the parallel_for pattern 
+     since it does not work well with high unbalanced loop iterations
+   - parallel_for/reduce: fixed some issues and optimized the case when it is 
+     used with just 1 thread
+   - ff_send_out_to modified in order to better work with ondemand scheduling
+     policy
+   - changed some int types with size_t, moved to svector whenever possible
+   - more possible combinations of farm, pipeline and feedback using 
+     ff_minode and ff_monode
+   - better multi-input and multi-output support (ff_minode ff_monode)
+   - ff_buffernode introduced 
+   - more low-level examples showing how to build "complex" graph of nodes
+   - better estimation of the bounded and unbounded SPSC queue length. 
+     Thanks to M. Moniruzzaman (moniruzzaman@hlrs.de) for the patch.
+   - fixed some problems with the current version in the SWPS3 example 
+     (thanks to Maurizio Drocco)
+   - introduced the ff_mdf/stencil2D/ff_graphsearch patterns (experimental)
+   - fixed a bug in the pipeline when used as an accelerator
+* 08/09/13 - v.2.0.2
+   - added the possibility to freeze and thaw one single worker thread
+     in a task-farm skeleton (see tests/test_stopstartthreads2.cpp)
+   - added end_callback in case an external tool wants to be notified 
+     of the skeleton tree termination
+   - introduced FF_ESAVER (Energy SAVER) compiler flag (experimental) (thanks to Mehdi Goli )
+   - ff_relax now uses nanosleep instead of usleep
+   - first full porting to ARM processor (thanks to Mauro Mulatero)	
+   - added new interfaces for the ff_farm
+   - added a new construct ff_pipe only for C++11
+   - fixed some problems with cmake
+   - added ff_send_out_to as a method of the ff_loadbalancer class
+   - added parallel_for.hpp which implements 'OpenMP-like' parallel_for 
+   - added cleanup_workers method in the farm skeleton
+   - removed fallback function in the farm emitter
+   - removed many warnings when compiling with the Intel compiler
+   - fixed get_my_id() problem for pipeline
+* 23/12/13 - v.2.0.1
+   - improved cmake compilation
+   - added experimental OFED code 
+   - added some layer1/2 tests
+   - map pattern using CUDA: ff_mapCUDA
+   - map and reduce patterns using OpenCL: ff_mapOCL and ff_reduceOCL
+   - Added multi-input node: ff_minode class implemented
+   - Added multi-output node: ff_monode class inplemented
+   - Distributed version ported and tested on Win7 64-bit.
+   - little fix on allocator.hpp, freesegment now release aligned memory 
+     to avoid stack corruption on Win platform that requires symmetric 
+     primitives for aligned memory allocation and deallocation.
+   - Winsock.h (windows.h) and winsock2.h incompatibility issue partially resolved.
+     <ff/dnode.h> should be included before other includes to avoid the problem. It
+	 includes winsock2.h that is required by zeromq.  
+* 04/07/12 - v.2.0.0
+   - fixed compilation ploblems on Windows 7 64bit using Visual Studio 10
+     (cmake -G "Visual Studio 10 Win64" ...)
+   - added class ff_dinout that allows to have a single dnode with both
+     input and output external channels.
+   - added the class ff_ofarm to implement the ordered farm template
+   - NO_DEFAULT_MAPPING compilation flag added 
+   - added the map template that can be used to compute map, map-reduce
+     and data-parallel patterns.
+   - Added the possibility to have multi-input Emitter in a farm template
+     (useful to collapse in a single thread the Collector and the Emitter 
+     in a 2-stage pipeline of 2 farms).
+   - Changed the thread start order in the farm skeleton. The old one was:
+     collector (if present), all workers, emitter; now it is: emitter,
+     all workers, and finally the collector (if present).
+   - Added the class threadMapper for implementing threads mapping. 
+   - Implemented the spinBarrier which has a lower overhead when the 
+     number of thread is high.
+   - Fixed problems in ffTime and ffwTime for application with nested patterns.
+   - The distributed communication patterns implemented so far are: 
+     Unicast, Broadcast, Scatter, Gather_All, FromAny, OnDemand
+   - first distributed implementation based on ZeroMQ message library
+   - dnode class added, minor changes to node class
+* not-released - v.1.2.0
+   - added a new implementation of the unbounded MPMC queue
+   - added an implementation of the bounded Multi-Producer/Multi-Consumer 
+     queue by Dmitry Vyukov (www.1024cores.net)
+   - implemented all_gather
+   - moved from int to unsigned long for embedded atomic operations
+   - performance improvements in the ff_allocator for the test one to many
+   - Micheal Scott 2-locks MPMC queue implementation (two methods mp_push 
+     and mp_pop have been added to the dSPSC queue)
+* 22/04/11 - v.1.1.1
+   - accelerator support implemented for the pipeline
+   - ff_send_out improvment: more control over the number of retries, return
+     value added
+   - barrier protocol re-worked, now is possible to create and to start a 
+     pipeline or a farm (or an accelerator) from inside a pipeline's node or 
+     a farm's worker/emitter/collector 
+   - added ffwTime which considers only the time spent in the svc methods
+   - changed the value of FF_GO_ON
+   - fixed SWSR_Ptr_Buffer length method (unsigned long --> long)
+   - fixed a bug which prevents to have a farm whose workers are D&C skeleton
+     (see test_multi_masterworker test)
+   - added the possibility to define workers' input queue size for the 
+     on-demand scheduling policy (default value is 1 slot)
+* 22/04/11 - v.1.1.0
+   - MSqueue reworked, now it is not in the experimental state.
+     The queue is working also on Windows OS and OSX. Removed DCAS and used CAS.
+   - removed some performance problems on Windows OS. 
+   - slightly modified MPMC interface and usage
+   - added Quicksort algo implementation which uses MPMC queue 
+     (both in blocking and non-blocking version)
+   - fixed some compilation problem under OSx
+* 01/04/11 - v.1.0.9
+   - fixes return type error in node.hpp ubuffer.hpp and buffer.hpp
+   - added the method get_channel_id() in the emitter and collector class
+     the method returns the id of the worker thread from which an input task
+     is coming from
+   - added the fibonacci and the quicksort examples
+   - added basic interface for pinning threads to CPUs
+   - added multipush and mpush to SWSR buffer (experimental code)
+   - added mpush to uSWSR queue (experimental code)
+   - more tests
+   - improved cmake test
+   - improved performance for fine grain D&C computation (farm+feedback)
+     by changing the losetime_in method in the lb class.
+   - added Multi-Producers/Multi-Consumers queue (MSqueue by Michael and Scott) 
+     (EXPERIMENTAL code )
+   - added abstraction_dcas from liblfds (www.liblfds.org), no powerpc support yet!
+   - fixed some bugs in the allocator
+   - posix_memalign implemented in the allocator
+   - ticket-spinlock from Linux kernel (EXPERIMENTAL code only for Linux)
+   - added two lock-based methods in uSWSR queue (mp_push and mc_pop)
+   - fixed missing files in CMakeLists.txt
+   - fixed deadlock situation when pipeline with feedback channel is created (torus pattern)
+   - implemented a Deferred Reclamation strategy based on number of free in the allocator
+   - added the ff_queue implementation of a SPSC queue by Dmitry Vyukov (www.1024cores.net)
+   - first porting on Windows OS
+* 01/09/10 - v.1.0.0
+   - New release
+   - some bugs fixed
+   - unbounded SWSR queue improved (removed all locks)
+   - added dynqueue (dynamic list-based queue)
+   - all .hpp files moved into the ff directory
+   - more tests added
+   - cmake compilation support (thanks to Fedor Sakharov)
+   - improved the accelerator sturcture (added FF_EOS_NOFREEZE tag)
+   - added the management of second level streams
+   - added the 'stop' method in the farm and pipeline skeleton
+   - fixed ffStats method when run_then_freeze is called multiple times
+   - one memory leak removed
+   - removed some warnings related to strict-aliasing 
+* 22/03/10 - v.1.0.0rc2
+   - Moved to LGPLv3 license. 
+   - More tests and applications (including pbzip2). 
+   - FastFlow Allocator improved. 
+   - Fixed some minor bugs. 
+   - Added the broadcast_task method.
+* 03/02/10 - v.1.0.0rc1 
+   - Minor API revision. 
+   - Improved FastFlow accelerator support. 
+   - More tests and applications,(Nokia QT Mandelbrot and NQueens)
+   - Simple execution trace support.
+   - Allocator improved. 
+* 16/11/09 - v.0.9.7
+   - Major API revision: patterns are no longer object factories but objects. 
+   - Support for arbitrary nesting of pipe, farm, and loop at high-level layer.
+   - First version of the Divide&Conquer pattern (no examples yet).
+   - First version of the FastFlow's Accelerator.
+* 19/10/09 - v.0.6.1
+   - FastFlow-swps3 Smith-Waterman application added.
+* 15/10/09 - v.0.5.0
+   - First release. 
+   - Support for farm skeleton/pattern.
