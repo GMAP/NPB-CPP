@@ -1,4 +1,4 @@
-# The NPB-CPP Benchmark Suite in C++ Parallel Programming Libraries for Multicores
+# The NPB Benchmark Suite with C++ Parallel Programming Libraries for Multicores
 
 The NPB's Fortran codes were carefully ported to **C++** and are fully compliant to the **NPB3.4.1** version ([NPB official webpage](https://www.nas.nasa.gov/publications/npb.html)). Our paper under review for a journal contains abundant information on how the porting was conducted and discusses the outcome performance we obtained with **NPB-CPP** on different machines (Intel Xeon, AMD Epyc and IBM Power8) and compilers (GCC and ICC). Results showed that we achieved similar performance with **NPB-CPP** compared to the original **NPB**. **You can use our paper, along with the official reports, as a guide to access performance using the NPB suite**. You can cite our [previous work](https://doi.org/10.1109/PDP2018.2018.00120) while our new paper is not published.
 
