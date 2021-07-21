@@ -1,12 +1,12 @@
 # Notes about the conversion
 
-- Memory conventions adopted for NPB-CPP improve the performance of the C++ code by reducing the execution time and memory consumption (for some benchmarks, these conventions let NPB-CPP even better than the original Fortran NPB3.3.1 such as BT pseudo-application).  
+- Memory conventions adopted for NPB-CPP improve the performance of the C++ code by reducing the execution time and memory consumption (for some benchmarks, these conventions let NPB-CPP even better than the original Fortran NPB3.4.1 such as BT pseudo-application).  
 
      - All global array is allocated with dynamic memory and as one single dimension.
 
-     - In the kernels, a cast is made in the functions so that it is possible to work using multi-dimension accesses with the arrays. For example, a function can receive an array-like matrix_aux[NY*NY], and work with accesses like matrix_aux[j][i], instead of one single dimension access (actually, the cast in the functions follows the original NPB3.3.1 way).
+     - In the kernels, a cast is made in the functions so that it is possible to work using multi-dimension accesses with the arrays. For example, a function can receive an array-like matrix_aux[NY*NY], and work with accesses like matrix_aux[j][i], instead of one single dimension access (actually, the cast in the functions follows the original NPB3.4.1 way).
 
-     - In the pseudo-applications, the cast is done already in the array declarations (NPB3.3.1 does not use one single dimension on pseudo-applications, so we cast the arrays directly on declarations, because this way, changes in the structure of the functions are not necessary).
+     - In the pseudo-applications, the cast is done already in the array declarations (NPB3.4.1 does not use one single dimension on pseudo-applications, so we cast the arrays directly on declarations, because this way, changes in the structure of the functions are not necessary).
 
      - To disable this convention (dynamic memory and on single dimension) is necessary to set the flag -DDO_NOT_ALLOCATE_ARRAYS_WITH_DYNAMIC_MEMORY_AND_AS_SINGLE_DIMENSION on the compilation.
 
@@ -22,8 +22,8 @@
 
 - FT kernel
 
-	- Instead of converting code directly from serial FT 3.3.1, we convert Fortran code from FT OpenMP version, where the format is equal to the FT serial versions before NPB 3.0.
-	- In non of the NPB versions with OpenMP are based on the serial code presented in 3.0 and 3.3.1 versions.
+	- Instead of converting code directly from serial FT 3.4.1, we convert Fortran code from FT OpenMP version, where the format is equal to the FT serial versions before NPB 3.0.
+	- In non of the NPB versions with OpenMP are based on the serial code presented in 3.0 and 3.4.1 versions.
 	- In version 3.4 (the most recent in this date), they state that the sequential code will no longer be available. The sequential code will be the OpenMP code without compiling with OpenMP.
  	- In the global.hpp, historically, the constants FFTBLOCK_DEFAULT and FFTBLOCKPAD_DEFAULT receive values that change the cache behavior of the applications and the performance can be better or worse for each processor according to which values are chosen. We define these constants with the value 1 (DEFAULT_BEHAVIOR), which determines a default behavior independently of the processor where the application is running.
 

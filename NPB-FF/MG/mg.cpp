@@ -1,25 +1,61 @@
-/**
- * NASA Advanced Supercomputing Parallel Benchmarks C++
- *
- * based on NPB 3.3.1
- *
- * original version and technical report:
- * http://www.nas.nasa.gov/Software/NPB/
- *
- * Authors:
- *     E. Barszcz
- *     P. Frederickson
- *     A. Woo
- *     M. Yarrow
- *
- * C++ version:
- *      Dalvan Griebler <dalvangriebler@gmail.com>
- *      Gabriell Alves de Araujo <hexenoften@gmail.com>
- *      Júnior Löff <loffjh@gmail.com>
- *
- * FastFlow version:
- *      Júnior Löff <loffjh@gmail.com>
- */
+/*
+MIT License
+
+Copyright (c) 2021 Parallel Applications Modelling Group - GMAP 
+	GMAP website: https://gmap.pucrs.br
+	
+	Pontifical Catholic University of Rio Grande do Sul (PUCRS)
+	Av. Ipiranga, 6681, Porto Alegre - Brazil, 90619-900
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------------
+
+The original NPB 3.4.1 version was written in Fortran and belongs to: 
+	http://www.nas.nasa.gov/Software/NPB/
+
+Authors of the Fortran code:
+	E. Barszcz
+	P. Frederickson
+	A. Woo
+	M. Yarrow
+	H. Jin
+
+------------------------------------------------------------------------------
+
+The serial C++ version is a translation of the original NPB 3.4.1
+Serial C++ version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-SER
+
+Authors of the C++ code: 
+	Dalvan Griebler <dalvangriebler@gmail.com>
+	Gabriell Araujo <hexenoften@gmail.com>
+ 	Júnior Löff <loffjh@gmail.com>
+
+------------------------------------------------------------------------------
+
+The FastFlow version is a parallel implementation of the serial C++ version
+FastFlow version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-FF
+
+Authors of the FastFlow code:
+	Júnior Löff <loffjh@gmail.com>
+	
+*/
 
 #include "ff/ff.hpp"
 #include "ff/parallel_for.hpp"
@@ -359,6 +395,7 @@ int main(int argc, char *argv[]){
 		mflops = 0.0;
 	}
 
+	setenv("FF_NUM_THREADS","1",0);
 	c_print_results((char*)"MG",
 			class_npb,
 			nx[lt],
@@ -473,7 +510,13 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
 	/* axis = 1 */
 	pf->parallel_for(1, n3-1, 1, [&](int i3){
 		int i2;
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast u = reinterpret_cast<custom_cast>(pointer_u);
+#else
 		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
+
 		for(i2 = 1; i2 < n2-1; i2++){
 			u[i3][i2][0] = u[i3][i2][n1-2];
 			u[i3][i2][n1-1] = u[i3][i2][1];			
@@ -482,7 +525,13 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
 	/* axis = 2 */
 	pf->parallel_for(1, n3-1, 1, [&](int i3){
 		int i1;
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast u = reinterpret_cast<custom_cast>(pointer_u);
+#else
 		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
+
 		for(i1 = 0; i1 < n1; i1++){
 			u[i3][0][i1] = u[i3][n2-2][i1];
 			u[i3][n2-1][i1] = u[i3][1][i1];			
@@ -491,7 +540,13 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
 	/* axis = 3 */
 	pf->parallel_for(0, n2, 1, [&](int i2){
 		int i1;
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast u = reinterpret_cast<custom_cast>(pointer_u);
+#else
 		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
+
 		for(i1 = 0; i1 < n1; i1++){
 			u[0][i2][i1] = u[n3-2][i2][i1];
 			u[n3-1][i2][i1] = u[1][i2][i1];			
@@ -513,8 +568,15 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
  * --------------------------------------------------------------------
  */
 static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, int n1, int n2, int n3, int k){
+#ifdef __clang__
+	using custom_cast = double (*)[mm2][mm1];
+	custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+	using custom_cast2 = double (*)[n2][n1];
+	custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);
+#else
 	double (*z)[mm2][mm1] = (double (*)[mm2][mm1])pointer_z;
-	double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;	
+	double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
 
 	int i3, i2, i1, d1, d2, d3, t1, t2, t3;
 
@@ -533,8 +595,15 @@ static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, 
 		pf->parallel_for(0, mm3-1, 1, [&](int i3){
 			double z1[M], z2[M], z3[M];
 			int i2, i1;
+#ifdef __clang__
+			using custom_cast = double (*)[mm2][mm1];
+			custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+			using custom_cast2 = double (*)[n2][n1];
+			custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);
+#else
 			double (*z)[mm2][mm1] = (double (*)[mm2][mm1])pointer_z;
 			double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
 
 			for(i2 = 0; i2 < mm2-1; i2++){
 				for(i1 = 0; i1 < mm1; i1++){
@@ -592,8 +661,17 @@ static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, 
 		}
 		pf->parallel_for(d3, mm3, 1, [&](int i3){
 			int i2, i1;
+
+#ifdef __clang__
+			using custom_cast = double (*)[mm2][mm1];
+			custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+			using custom_cast2 = double (*)[n2][n1];
+			custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);
+#else
 			double (*z)[mm2][mm1] = (double (*)[mm2][mm1])pointer_z;
 			double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
+
 			for(i2 = d2; i2 <= mm2-1; i2++){
 				for(i1 = d1; i1 <= mm1-1; i1++){
 					u[2*i3-d3-1][2*i2-d2-1][2*i1-d1-1] =
@@ -622,8 +700,17 @@ static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, 
 		});
         pf->parallel_for(1, mm3, 1, [&](int i3){
 			int i2, i1;
+
+#ifdef __clang__
+			using custom_cast = double (*)[mm2][mm1];
+			custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+			using custom_cast2 = double (*)[n2][n1];
+			custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);
+#else
 			double (*z)[mm2][mm1] = (double (*)[mm2][mm1])pointer_z;
 			double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+#endif
+
 			for(i2 = d2; i2 <= mm2-1; i2++){
 				for(i1 = d1; i1 <= mm1-1; i1++){
 					u[2*i3-t3-1][2*i2-d2-1][2*i1-d1-1] =
@@ -753,7 +840,13 @@ static void norm2u3(void* pointer_r, int n1, int n2, int n3, double* rnm2, doubl
     }
 
 	pf->parallel_for_thid(1, n3-1, 1, 0, [&](int i3, int worker_id){
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast r = reinterpret_cast<custom_cast>(pointer_r);
+#else
 		double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;
+#endif
+
 		int i2, i1;
 		double a;
 
@@ -816,8 +909,15 @@ static double power(double a, int n){
  * --------------------------------------------------------------------
  */
 static void psinv(void* pointer_r, void* pointer_u, int n1, int n2, int n3, double c[4], int k){
+#ifdef __clang__
+	using custom_cast = double (*)[n2][n1];
+	custom_cast r = reinterpret_cast<custom_cast>(pointer_r);	
+	using custom_cast2 = double (*)[n2][n1];
+	custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);
+#else
 	double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;
-	double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
+	double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;	
+#endif
 
 	int i3, i2, i1;
 	double r1[M], r2[M];
@@ -827,9 +927,17 @@ static void psinv(void* pointer_r, void* pointer_u, int n1, int n2, int n3, doub
 	pf->parallel_for(1, n3-1, 1,[&](int i3){
 		int i2, i1;
 		double r1[M], r2[M];
-		double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;
-		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
 
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast r = reinterpret_cast<custom_cast>(pointer_r);
+		using custom_cast2 = double (*)[n2][n1];
+		custom_cast2 u = reinterpret_cast<custom_cast2>(pointer_u);		
+#else
+		double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;
+		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;	
+#endif
+		
 		for(i2 = 1; i2 < n2-1; i2++){
 			for(i1 = 0; i1 < n1; i1++){
 				r1[i1] = r[i3][i2-1][i1] + r[i3][i2+1][i1]
@@ -899,9 +1007,18 @@ static void rep_nrm(void* pointer_u, int n1, int n2, int n3, char* title, int kk
  * --------------------------------------------------------------------
  */
 static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int n2, int n3, double a[4], int k){
+#ifdef __clang__
+	using custom_cast = double (*)[n2][n1];
+	custom_cast u = reinterpret_cast<custom_cast>(pointer_u);	
+	using custom_cast2 = double (*)[n2][n1];
+	custom_cast2 v = reinterpret_cast<custom_cast2>(pointer_v);
+	using custom_cast3 = double (*)[n2][n1];
+	custom_cast3 r = reinterpret_cast<custom_cast3>(pointer_r);	
+#else
 	double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
 	double (*v)[n2][n1] = (double (*)[n2][n1])pointer_v;
-	double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;	
+	double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;		
+#endif
 
 	int i3, i2, i1;
 	double u1[M], u2[M];
@@ -911,9 +1028,19 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 	pf->parallel_for(1, n3-1, 1,[&](int i3){
 		int i2, i1;
 		double u1[M], u2[M];
+
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast u = reinterpret_cast<custom_cast>(pointer_u);
+		using custom_cast2 = double (*)[n2][n1];
+		custom_cast2 v = reinterpret_cast<custom_cast2>(pointer_v);
+		using custom_cast3 = double (*)[n2][n1];
+		custom_cast3 r = reinterpret_cast<custom_cast3>(pointer_r);
+#else
 		double (*u)[n2][n1] = (double (*)[n2][n1])pointer_u;
 		double (*v)[n2][n1] = (double (*)[n2][n1])pointer_v;
-		double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;
+		double (*r)[n2][n1] = (double (*)[n2][n1])pointer_r;		
+#endif
 		
 		for(i2 = 1; i2 < n2-1; i2++){
 			for(i1 = 0; i1 < n1; i1++){
@@ -969,8 +1096,15 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
  * --------------------------------------------------------------------
  */
 static void rprj3(void* pointer_r, int m1k, int m2k, int m3k, void* pointer_s, int m1j, int m2j, int m3j, int k){
+#ifdef __clang__
+	using custom_cast = double (*)[m2k][m1k];
+	custom_cast r = reinterpret_cast<custom_cast>(pointer_r);
+	using custom_cast2 = double (*)[m2j][m1j];
+	custom_cast2 s = reinterpret_cast<custom_cast2>(pointer_s);
+#else
 	double (*r)[m2k][m1k] = (double (*)[m2k][m1k])pointer_r;
-	double (*s)[m2j][m1j] = (double (*)[m2j][m1j])pointer_s;	
+	double (*s)[m2j][m1j] = (double (*)[m2j][m1j])pointer_s;		
+#endif
 
 	int j3, j2, j1, i3, i2, i1, d1, d2, d3, j;
 
@@ -995,8 +1129,16 @@ static void rprj3(void* pointer_r, int m1k, int m2k, int m3k, void* pointer_s, i
 	pf->parallel_for(1, m3j-1, 1, [&](int j3){
 		int j2, j1, i3, i2, i1;
         double x1[M], y1[M], x2, y2;
+
+#ifdef __clang__
+		using custom_cast = double (*)[m2k][m1k];
+		custom_cast r = reinterpret_cast<custom_cast>(pointer_r);
+		using custom_cast2 = double (*)[m2j][m1j];
+		custom_cast2 s = reinterpret_cast<custom_cast2>(pointer_s);	
+#else
         double (*r)[m2k][m1k] = (double (*)[m2k][m1k])pointer_r;
-		double (*s)[m2j][m1j] = (double (*)[m2j][m1j])pointer_s;
+		double (*s)[m2j][m1j] = (double (*)[m2j][m1j])pointer_s;	
+#endif
 
 		i3 = 2*j3-d3;		
 		for(j2 = 1; j2 < m2j-1; j2++){
@@ -1092,7 +1234,13 @@ static void setup(int* n1, int* n2, int* n3, int k){
 }
 
 static void showall(void* pointer_z, int n1, int n2, int n3){
-	double (*z)[n2][n1] = (double (*)[n2][n1])pointer_z;
+
+#ifdef __clang__
+	using custom_cast = double (*)[n2][n1];
+	custom_cast z = reinterpret_cast<custom_cast>(pointer_z);	
+#else
+	double (*z)[n2][n1] = (double (*)[n2][n1])pointer_z;	
+#endif
 
 	int i1,i2,i3;
 	int m1, m2, m3;
@@ -1118,7 +1266,12 @@ static void zero3(void* pointer_z, int n1, int n2, int n3){
 
 	pf->parallel_for(0, n3, 1, [&](int i3){
 		int i2, i1;
+#ifdef __clang__
+		using custom_cast = double (*)[n2][n1];
+		custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+#else
 		double (*z)[n2][n1] = (double (*)[n2][n1])pointer_z;
+#endif
 
 		for(i2 = 0; i2 < n2; i2++){
 			for(i1 = 0; i1 < n1; i1++){
@@ -1136,7 +1289,12 @@ static void zero3(void* pointer_z, int n1, int n2, int n3){
  * ---------------------------------------------------------------------
  */
 static void zran3(void* pointer_z, int n1, int n2, int n3, int nx, int ny, int k){
+#ifdef __clang__
+	using custom_cast = double (*)[n2][n1];
+	custom_cast z = reinterpret_cast<custom_cast>(pointer_z);
+#else
 	double (*z)[n2][n1] = (double (*)[n2][n1])pointer_z;
+#endif
 
 	int i0, m0, m1;
 

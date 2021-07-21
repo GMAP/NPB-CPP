@@ -1,20 +1,35 @@
-/**
- * NASA Advanced Supercomputing Parallel Benchmarks C++
- *
- * based on NPB 3.3.1
- *
- * original version and technical report:
- * http://www.nas.nasa.gov/Software/NPB/
- *
- * Authors:
- *     M. Yarrow
- *     H. Jin
- *
- * C++ version:
- *      Dalvan Griebler <dalvangriebler@gmail.com>
- *      Gabriell Alves de Araujo <hexenoften@gmail.com>
- *      Júnior Löff <loffjh@gmail.com>
- */
+/*
+NASA Open Source Agreement (NOSA)
+
+Copyright (c) 2019 NASA Advanced Supercomputing (NAS) Division 
+	NASA website: http://www.nas.nasa.gov/Software/NPB/
+	
+	NAS Parallel Benchmarks Group
+	NASA Ames Research Center
+	Mail Stop: T27A-1
+	Moffett Field, CA   94035-1000
+	E-mail:  npb@nas.nasa.gov
+	Fax:     (650) 604-3957
+
+License agreements: https://opensource.org/licenses/nasa1.3.php
+
+--------------------------------------------------------------------------
+
+The original NPB 3.4.1 version belongs to: 
+	http://www.nas.nasa.gov/Software/NPB/
+
+Authors of the C code:
+	M. Yarrow
+	H. Jin
+	
+--------------------------------------------------------------------------
+
+Authors of the C++ code: 
+	Dalvan Griebler <dalvangriebler@gmail.com>
+	Gabriell Araujo <hexenoften@gmail.com>
+ 	Júnior Löff <loffjh@gmail.com>
+*/
+
 
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"

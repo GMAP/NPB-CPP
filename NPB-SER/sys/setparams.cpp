@@ -1,16 +1,46 @@
-/**
- * NASA Advanced Supercomputing Parallel Benchmarks C++
- *
- * based on NPB 3.3.1
- *
- * original version and technical report:
- * http://www.nas.nasa.gov/Software/NPB/
- *
- * C++ version:
- *      Dalvan Griebler <dalvangriebler@gmail.com>
- *      Gabriell Alves de Araujo <hexenoften@gmail.com>
- *      Júnior Löff <loffjh@gmail.com>
- */
+/*
+MIT License
+
+Copyright (c) 2021 Parallel Applications Modelling Group - GMAP 
+	GMAP website: https://gmap.pucrs.br
+	
+	Pontifical Catholic University of Rio Grande do Sul (PUCRS)
+	Av. Ipiranga, 6681, Porto Alegre - Brazil, 90619-900
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------------
+
+The original NPB 3.4.1 version was written in Fortran and belongs to: 
+	http://www.nas.nasa.gov/Software/NPB/
+
+------------------------------------------------------------------------------
+
+The serial C++ version is a translation of the original NPB 3.4.1
+Serial C++ version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-SER
+
+Authors of the C++ code: 
+	Dalvan Griebler <dalvangriebler@gmail.com>
+	Gabriell Araujo <hexenoften@gmail.com>
+ 	Júnior Löff <loffjh@gmail.com>
+*/ 
+
 /* 
  * this utility configures a NPB to be built for a specific class. 
  * it creates a file "npbparams.h" 
@@ -91,13 +121,13 @@ int ilog2(int i);
 
 enum benchmark_types {SP, BT, LU, MG, FT, IS, EP, CG, DC};
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 	int type;
 	char class_npb, class_old;
 
 	if(argc != 3){
 		printf("Usage: %s benchmark-name class_npb\n", argv[0]);
-		exit(1);
+		return 1;
 	}
 
 	/* get command line arguments. make sure they're ok. */
@@ -132,7 +162,7 @@ main(int argc, char *argv[]){
 				printf("setparams: Previous settings were CLASS=%c \n", class_old); 
 #endif
 			}
-		exit(1); /* exit on class==U */
+		return 1; /* exit on class==U */
 	}
 
 	/* write out new information if it's different. */
@@ -147,7 +177,7 @@ main(int argc, char *argv[]){
 #endif
 	}
 
-	exit(0);
+	return 0;
 }
 
 /*
@@ -650,8 +680,16 @@ void write_compiler_info(int type, FILE *fp){
 	(void) time(&t);
 	tmp = localtime(&t);
 	(void) strftime(compiletime, (size_t)LL, "%d %b %Y", tmp);
-	char tmp2[10];
+		char tmp2[15];
+#ifdef __clang__
+	sprintf(tmp2, "%d.%d.%d", __clang_major__,__clang_minor__,__clang_patchlevel__);
+#elif __GNUG__
 	sprintf(tmp2, "%d.%d.%d", __GNUG__,__GNUC_MINOR__,__GNUC_PATCHLEVEL__);
+#elif __INTEL_COMPILER
+	sprintf(tmp2, "%d.%d", __INTEL_COMPILER,__INTEL_COMPILER_UPDATE);
+#else
+	sprintf(tmp2, "not found");	
+#endif
 
 	switch(type){
 		case FT:

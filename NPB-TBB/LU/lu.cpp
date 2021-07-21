@@ -1,25 +1,61 @@
-/**
- * NASA Advanced Supercomputing Parallel Benchmarks C++
- *
- * based on NPB 3.3.1
- *
- * original version and technical report:
- * http://www.nas.nasa.gov/Software/NPB/
- *
- * Authors:
- *     S. Weeratunga
- *     V. Venkatakrishnan
- *     E. Barszcz
- *     M. Yarrow
- *
- * C++ version:
- *      Dalvan Griebler <dalvangriebler@gmail.com>
- *      Gabriell Alves de Araujo <hexenoften@gmail.com>
- *      Júnior Löff <loffjh@gmail.com>
- *
- * TBB version:
- *      Júnior Löff <loffjh@gmail.com>
- */
+/*
+MIT License
+
+Copyright (c) 2021 Parallel Applications Modelling Group - GMAP 
+	GMAP website: https://gmap.pucrs.br
+	
+	Pontifical Catholic University of Rio Grande do Sul (PUCRS)
+	Av. Ipiranga, 6681, Porto Alegre - Brazil, 90619-900
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+------------------------------------------------------------------------------
+
+The original NPB 3.4.1 version was written in Fortran and belongs to: 
+	http://www.nas.nasa.gov/Software/NPB/
+
+Authors of the Fortran code:
+	S. Weeratunga
+	V. Venkatakrishnan
+	E. Barszcz
+	M. Yarrow
+	H. Jin
+
+------------------------------------------------------------------------------
+
+The serial C++ version is a translation of the original NPB 3.4.1
+Serial C++ version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-SER
+
+Authors of the C++ code: 
+	Dalvan Griebler <dalvangriebler@gmail.com>
+	Gabriell Araujo <hexenoften@gmail.com>
+ 	Júnior Löff <loffjh@gmail.com>
+
+------------------------------------------------------------------------------
+
+The Intel TBB version is a parallel implementation of the serial C++ version
+Intel TBB version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-TBB
+
+Authors of the Intel TBB code:
+	Júnior Löff <loffjh@gmail.com>
+	
+*/
 
 #include "tbb/parallel_for.h"
 #include "tbb/blocked_range.h"
@@ -351,6 +387,7 @@ int main(int argc, char* argv[]){
 			+27770.9*(double)(nx0+ny0+nz0)/3.0
 			-144010.0)
 		/(maxtime*1000000.0);
+	setenv("TBB_NUM_THREADS","1",0);
 	c_print_results((char*)"LU",
 			class_npb,
 			nx0,

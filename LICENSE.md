@@ -2,6 +2,12 @@ MIT License
 
 Copyright (c) 2021 Parallel Applications Modelling Group - GMAP
 
+ GMAP website: https://gmap.pucrs.br
+	
+ Pontifical Catholic University of Rio Grande do Sul (PUCRS)
+ 
+ Av. Ipiranga, 6681, Porto Alegre - Brazil, 90619-900
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

@@ -1,6 +1,11 @@
-# The NPB Benchmark Suite with C++ Parallel Programming Libraries for Multicores
+# The NAS Parallel Benchmarks for evaluating C++ parallel programming frameworks on shared-memory architectures
 
-The NPB's Fortran codes were carefully ported to **C++** and are fully compliant to the **NPB3.4.1** version ([NPB official webpage](https://www.nas.nasa.gov/publications/npb.html)). Our paper under review for a journal contains abundant information on how the porting was conducted and discusses the outcome performance we obtained with **NPB-CPP** on different machines (Intel Xeon, AMD Epyc and IBM Power8) and compilers (GCC and ICC). Results showed that we achieved similar performance with **NPB-CPP** compared to the original **NPB**. **You can use our paper, along with the official reports, as a guide to access performance using the NPB suite**. You can cite our [previous work](https://doi.org/10.1109/PDP2018.2018.00120) while our new paper is not published.
+The NPB's Fortran codes were carefully ported to **C++** and are fully compliant to the **NPB3.4.1** version ([NPB official webpage](https://www.nas.nasa.gov/publications/npb.html)). Our [paper](https://doi.org/10.1016/j.future.2021.07.021) contains abundant information on how the porting was conducted and discusses the outcome performance we obtained with **NPB-CPP** on different machines (Intel Xeon, AMD Epyc, and IBM Power8) and compilers (GCC, ICC, and Clang). Results showed that we achieved similar performance with **NPB-CPP** compared to the original **NPB**. **You can use our paper, along with the official reports, as a guide to assess performance using the NPB suite**.
+
+## How to cite this work
+  
+[[DOI]](https://doi.org/10.1016/j.future.2021.07.021) J. Löff, D. Griebler, G. Mencagli et al., **The NAS Parallel Benchmarks for evaluating C++ parallel programming frameworks on shared-memory architectures**, *Future Generation Computer Systems (FGCS)* (2021)
+
 
 *This is a repository aimed at providing parallel codes with different C++ parallel programming APIs for the NAS Parallel Benchmarks (NPB). You can also contribute with this project, writing issues and pull requests.*
 
@@ -11,14 +16,14 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
       NAS Parallel Benchmarks in C++ using OpenMP, FastFlow and Intel TBB
 
         This project was conducted in the Parallel Applications
-        Modeling Group (GMAP) at PUCRS - Brazil.
+        Modelling Group (GMAP) at PUCRS - Brazil.
 
         GMAP Research Group leader:
             Luiz Gustavo Leão Fernandes
 
         Code contributors: 
             Dalvan Griebler (PUCRS)
-            Gabriell Alves de Araujo (PUCRS)
+            Gabriell Araujo (PUCRS)
             Júnior Löff (PUCRS)
 
       In case of questions or problems, please send an e-mail to us:	
