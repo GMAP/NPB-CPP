@@ -86,8 +86,11 @@ static inline dcomplex dcomplex_div(dcomplex z1, dcomplex z2){
 #define dcomplex_abs(x)    sqrt(((x).real*(x).real) + ((x).imag*(x).imag))
 #define dconjg(x)          (dcomplex){(x).real, -1.0*(x).imag}
 
+#pragma omp declare target
 extern double randlc(double *, double);
 extern void vranlc(int, double *, double, double *);
+#pragma omp end declare target
+
 extern void timer_clear(int);
 extern void timer_start(int);
 extern void timer_stop(int);

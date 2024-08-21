@@ -77,6 +77,7 @@ Authors of the C++ code:
  * 
  * ---------------------------------------------------------------------
  */
+#pragma omp declare target
 double randlc(double *x, double a){    
 	double t1,t2,t3,t4,a1,a2,x1,x2,z;
 
@@ -173,3 +174,4 @@ void vranlc(int n, double *x_seed, double a, double y[]){
 	}
 	*x_seed = x;
 }
+#pragma omp end declare target

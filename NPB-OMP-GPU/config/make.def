@@ -37,7 +37,7 @@ CLINK	= $(CC)
 #---------------------------------------------------------------------------
 # These macros are passed to the linker 
 #---------------------------------------------------------------------------
-C_LIB  = -lm
+C_LIB  = -lm -L../common
 
 
 #---------------------------------------------------------------------------
@@ -49,7 +49,7 @@ C_INC = -I../common
 #---------------------------------------------------------------------------
 # Global *compile time* flags for C programs
 #---------------------------------------------------------------------------
-CFLAGS	= -O3 -fiopenmp -qopenmp -mcmodel=medium -fopenmp-targets=spir64 
+CFLAGS	= -O3 -qopenmp -qopenmp -mcmodel=medium -fopenmp-targets=spir64 
 
 
 #---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ CLINKFLAGS = -O3 -qopenmp -mcmodel=medium -fopenmp-targets=spir64
 # this compiler go here also; typically there are few flags required; hence 
 # there are no separate macros provided for such flags.
 #---------------------------------------------------------------------------
-UCC	= g++ -fopenmp
+UCC	= icpx -fiopenmp -qopenmp -fopenmp-targets=spir64
 
 
 #---------------------------------------------------------------------------
