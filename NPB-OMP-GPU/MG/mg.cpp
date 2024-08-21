@@ -81,8 +81,6 @@ Authors of the OpenMP code:
 #define T_COMM3 9
 #define T_LAST 10
 
-
-#pragma omp declare target
 /* global variables */
 #if defined(DO_NOT_ALLOCATE_ARRAYS_WITH_DYNAMIC_MEMORY_AND_AS_SINGLE_DIMENSION)
 static int nx[MAXLEVEL+1];
@@ -111,7 +109,6 @@ static double (*r)=(double*)malloc(sizeof(double)*(NR));
 #endif
 static int is1, is2, is3, ie1, ie2, ie3, lt, lb;
 static boolean timeron;
-#pragma omp end declare target
 
 /* function prototypes */
 static void bubble(double ten[][MM], int j1[][MM], int j2[][MM], int j3[][MM], int m, int ind);
@@ -288,19 +285,7 @@ int main(int argc, char *argv[]){
 	printf(" Size: %3dx%3dx%3d (class_npb %1c)\n", nx[lt], ny[lt], nz[lt], class_npb);
 	printf(" Iterations: %3d\n", nit);
 	
-	#pragma omp target enter data map(to: nx[0:MAXLEVEL+1], \
-                                     ny[0:MAXLEVEL+1], \
-                                     nz[0:MAXLEVEL+1], \
-                                     m1[0:MAXLEVEL+1], \
-                                     m2[0:MAXLEVEL+1], \
-                                     m3[0:MAXLEVEL+1], \
-                                     ir[0:MAXLEVEL+1], \
-                                     debug_vec[0:8], \
-                                     u[0:NR], \
-                                     v[0:NV], \
-                                     r[0:NR], nit, it)
-	{
-	#pragma omp target
+	#pragma omp parallel
 	{
 		resid(u,v,r,n1,n2,n3,a,k);
 
@@ -315,14 +300,12 @@ int main(int argc, char *argv[]){
 		resid(u,v,r,n1,n2,n3,a,k);
 	}
 	
-	#pragma omp target 
-	{
-		setup(&n1,&n2,&n3,k);
+	setup(&n1,&n2,&n3,k);
 
-		zero3(u,n1,n2,n3);
+	zero3(u,n1,n2,n3);
 
-		zran3(v,n1,n2,n3,nx[lt],ny[lt],k);
-	}
+	zran3(v,n1,n2,n3,nx[lt],ny[lt],k);
+
 	timer_stop(T_INIT);
 	tinit = timer_read(T_INIT);
 	printf(" Initialization time: %15.3f seconds\n", tinit);
@@ -332,6 +315,7 @@ int main(int argc, char *argv[]){
 	}
 	timer_start(T_BENCH);
 
+	#pragma omp parallel firstprivate(nit) private(it)
     {
 
 		if(timeron){
@@ -339,7 +323,6 @@ int main(int argc, char *argv[]){
 				timer_start(T_RESID2);
 		}
 		
-		#pragma omp target
 		resid(u,v,r,n1,n2,n3,a,k);
 		
 		if(timeron){
@@ -347,7 +330,6 @@ int main(int argc, char *argv[]){
 				timer_stop(T_RESID2);
 		}
 
-		#pragma omp target
 		norm2u3(r,n1,n2,n3,&rnm2,&rnmu,nx[lt],ny[lt],nz[lt]);
 
 		for(it = 1; it <= nit; it++){
@@ -361,7 +343,6 @@ int main(int argc, char *argv[]){
 					timer_start(T_MG3P);
 			}
 
-			#pragma omp target
 			mg3P(u,v,r,a,c,n1,n2,n3,k);
 
 			if(timeron){
@@ -373,7 +354,6 @@ int main(int argc, char *argv[]){
 					timer_start(T_RESID2);
 			}
 
-			#pragma omp target
 			resid(u,v,r,n1,n2,n3,a,k);
 
 			if(timeron){
@@ -384,18 +364,6 @@ int main(int argc, char *argv[]){
 	
 		norm2u3(r,n1,n2,n3,&rnm2,&rnmu,nx[lt],ny[lt],nz[lt]);
 	} /* end parallel */
-	} /* end target data*/
-	#pragma omp target map(from: nx[0:MAXLEVEL+1], \
-							ny[0:MAXLEVEL+1], \
-							nz[0:MAXLEVEL+1], \
-							m1[0:MAXLEVEL+1], \
-							m2[0:MAXLEVEL+1], \
-							m3[0:MAXLEVEL+1], \
-							ir[0:MAXLEVEL+1], \
-							debug_vec[0:8], \
-							u[0:NR], \
-							v[0:NV], \
-							r[0:NR])
 
 	timer_stop(T_BENCH);
 
@@ -567,10 +535,10 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
 #endif
 
 	int i1, i2, i3;
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_COMM3);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_COMM3);
+	}
 	#pragma omp for
 	for(i3 = 1; i3 < n3-1; i3++){
 		/* axis = 1 */
@@ -593,10 +561,10 @@ static void comm3(void* pointer_u, int n1, int n2, int n3, int kk){
 		}
 	}
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_COMM3);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_COMM3);
+	}
 }
 
 /*
@@ -634,10 +602,10 @@ static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, 
 	 */
 	double z1[M], z2[M], z3[M];
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_INTERP);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_INTERP);
+	}
 
 	if(n1 != 3 && n2 != 3 && n3 != 3){
 		#pragma omp for
@@ -757,10 +725,10 @@ static void interp(void* pointer_z, int mm1, int mm2, int mm3, void* pointer_u, 
 			}
 		}
 	}
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_INTERP);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_INTERP);
+	}
 	#pragma omp single
     {
 		if(debug_vec[0] >= 1){
@@ -855,10 +823,10 @@ static void norm2u3(void* pointer_r, int n1, int n2, int n3, double* rnm2, doubl
 
 	double dn;
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_NORM2);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_NORM2);
+	}
 	dn = 1.0*nx*ny*nz;
 
 	#pragma omp single
@@ -880,10 +848,10 @@ static void norm2u3(void* pointer_r, int n1, int n2, int n3, double* rnm2, doubl
 
 	*rnmu = rnmu_local;
 	*rnm2 = sqrt(s/dn);
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_NORM2);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_NORM2);
+	}
 }
 
 /*
@@ -938,10 +906,10 @@ static void psinv(void* pointer_r, void* pointer_u, int n1, int n2, int n3, doub
 	int i3, i2, i1;
 	double r1[M], r2[M];
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_PSINV);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_PSINV);
+	}
 	
 	#pragma omp for
 	for(i3 = 1; i3 < n3-1; i3++){
@@ -968,10 +936,10 @@ static void psinv(void* pointer_r, void* pointer_u, int n1, int n2, int n3, doub
 			}
 		}
 	}
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_PSINV);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_PSINV);
+	}
 
 	/*
 	 * --------------------------------------------------------------------
@@ -1034,10 +1002,10 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 	int i3, i2, i1;
 	double u1[M], u2[M];
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_RESID);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_RESID);
+	}
 	#pragma omp for
 	for(i3 = 1; i3 < n3-1; i3++){
 		for(i2 = 1; i2 < n2-1; i2++){
@@ -1063,10 +1031,10 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 			}
 		}
 	}
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_RESID);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_RESID);
+	}
 
 	/*
 	 * --------------------------------------------------------------------
@@ -1112,10 +1080,10 @@ static void rprj3(void* pointer_r, int m1k, int m2k, int m3k, void* pointer_s, i
 
 	double x1[M], y1[M], x2, y2;
 
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_start(T_RPRJ3);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_start(T_RPRJ3);
+	}
 	if(m1k == 3){
 		d1 = 2;
 	}else{
@@ -1158,10 +1126,10 @@ static void rprj3(void* pointer_r, int m1k, int m2k, int m3k, void* pointer_s, i
 			}
 		}
 	}
-	// if(timeron){
-	// 	#pragma omp master
-	// 		timer_stop(T_RPRJ3);
-	// }
+	if(timeron){
+		#pragma omp master
+			timer_stop(T_RPRJ3);
+	}
 
 	j=k-1;
 	comm3(s,m1j,m2j,m3j,j);
