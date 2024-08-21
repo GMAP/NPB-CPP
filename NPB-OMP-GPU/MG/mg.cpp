@@ -1006,6 +1006,7 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 		#pragma omp master
 			timer_start(T_RESID);
 	}
+	
 	#pragma omp for
 	for(i3 = 1; i3 < n3-1; i3++){
 		for(i2 = 1; i2 < n2-1; i2++){
@@ -1031,6 +1032,9 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 			}
 		}
 	}
+
+	printf("r[1]: %f; i1: %d;\n", r[1][1][1], i1);
+	
 	if(timeron){
 		#pragma omp master
 			timer_stop(T_RESID);
