@@ -39,7 +39,7 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-*/
+*/ 
 
 #include <cstdio>
 #include <cstdlib>
@@ -86,11 +86,8 @@ static inline dcomplex dcomplex_div(dcomplex z1, dcomplex z2){
 #define dcomplex_abs(x)    sqrt(((x).real*(x).real) + ((x).imag*(x).imag))
 #define dconjg(x)          (dcomplex){(x).real, -1.0*(x).imag}
 
-#pragma omp declare target
 extern double randlc(double *, double);
 extern void vranlc(int, double *, double, double *);
-#pragma omp end declare target
-
 extern void timer_clear(int);
 extern void timer_start(int);
 extern void timer_stop(int);
@@ -109,8 +106,6 @@ extern void c_print_results(char* name,
 		char* npbversion,
 		char* compiletime,
 		char* compilerversion,
-		char* libversion,
-		char* totalthreads,
 		char* cc,
 		char* clink,
 		char* c_lib,

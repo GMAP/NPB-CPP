@@ -21,18 +21,16 @@ The original NPB 3.4.1 version belongs to:
 Authors of the C code:
 	M. Yarrow
 	H. Jin
-
-------------------------------------------------------------------------------
-
-The OpenMP version is a parallel implementation of the serial C version
-OpenMP version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-OMP
-
-Authors of the OpenMP code:
-	Júnior Löff <loffjh@gmail.com>
 	
+--------------------------------------------------------------------------
+
+Authors of the C++ code: 
+	Dalvan Griebler <dalvangriebler@gmail.com>
+	Gabriell Araujo <hexenoften@gmail.com>
+ 	Júnior Löff <loffjh@gmail.com>
 */
 
-#include "omp.h"
+
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"
 
@@ -164,9 +162,13 @@ INT_TYPE** key_buff1_aptr = NULL;
 #endif
 
 #ifdef USE_BUCKETS
+#if defined(DO_NOT_ALLOCATE_ARRAYS_WITH_DYNAMIC_MEMORY_AND_AS_SINGLE_DIMENSION)
 INT_TYPE** bucket_size; 
 INT_TYPE bucket_ptrs[NUM_BUCKETS];
-#pragma omp threadprivate(bucket_ptrs)
+#else
+INT_TYPE** bucket_size; 
+INT_TYPE (*bucket_ptrs)=(INT_TYPE*)malloc(sizeof(INT_TYPE)*(NUM_BUCKETS));
+#endif
 #endif
 
 /**********************/
@@ -277,7 +279,7 @@ int main(int argc, char** argv){
 		};        
 
 	/* Printout initial NPB info */
-	printf("\n\n NAS Parallel Benchmarks 4.1 Parallel C++ version with OpenMP - IS Benchmark\n\n");
+	printf("\n\n NAS Parallel Benchmarks 4.1 Serial C++ version - IS Benchmark\n\n");
 	printf(" Size:  %ld  (class %c)\n", (long)TOTAL_KEYS, CLASS);
 	printf(" Iterations:   %d\n", MAX_ITERATIONS);
 	printf( "\n" );
@@ -323,7 +325,6 @@ int main(int argc, char** argv){
 
 	/* The final printout */
 	if(passed_verification != 5*MAX_ITERATIONS + 1){passed_verification = 0;}
-	setenv("OMP_NUM_THREADS","1",0);
 	c_print_results((char*)"IS",
 			CLASS,
 			(int)(TOTAL_KEYS/64),
@@ -337,8 +338,6 @@ int main(int argc, char** argv){
 			(char*)NPBVERSION,
 			(char*)COMPILETIME,
 			(char*)COMPILERVERSION,
-			(char*)LIBVERSION,
-			std::getenv("OMP_NUM_THREADS"),
 			(char*)CS1,
 			(char*)CS2,
 			(char*)CS3,
@@ -372,7 +371,7 @@ void alloc_key_buff(){
 	INT_TYPE i;
 	int num_procs;
 
-	num_procs = omp_get_max_threads();
+	num_procs = 1;
 
 #ifdef USE_BUCKETS
 	bucket_size = (INT_TYPE**)alloc_mem(sizeof(INT_TYPE*)*num_procs);
@@ -380,8 +379,7 @@ void alloc_key_buff(){
 	for(i = 0; i < num_procs; i++){
 		bucket_size[i] = (INT_TYPE*)alloc_mem(sizeof(INT_TYPE)*NUM_BUCKETS);
 	}
-	
-	#pragma omp parallel for
+
 	for( i=0; i<NUM_KEYS; i++ )
 		key_buff2[i] = 0;
 #else /*USE_BUCKETS*/
@@ -412,40 +410,37 @@ void* alloc_mem(size_t size){
 /*****************************************************************/
 void create_seq(double seed,
 		double a){
-	#pragma omp parallel
-	{
-		double x, s;
-		INT_TYPE i, k;
+	double x, s;
+	INT_TYPE i, k;
 
-		INT_TYPE k1, k2;
-		double an = a;
-		int myid, num_procs;
-		INT_TYPE mq;
+	INT_TYPE k1, k2;
+	double an = a;
+	int myid, num_procs;
+	INT_TYPE mq;
 
-		myid = omp_get_thread_num();
-		num_procs = omp_get_num_threads();
+	myid = 0;
+	num_procs = 1;
 
-		mq = (NUM_KEYS + num_procs - 1) / num_procs;
-		k1 = mq * myid;
-		k2 = k1 + mq;
-		if ( k2 > NUM_KEYS ) k2 = NUM_KEYS;
+	mq = (NUM_KEYS + num_procs - 1) / num_procs;
+	k1 = mq * myid;
+	k2 = k1 + mq;
+	if ( k2 > NUM_KEYS ) k2 = NUM_KEYS;
 
-		s = find_my_seed( myid, 
-				num_procs,
-				(long)4*NUM_KEYS,
-				seed,
-				an );
+	s = find_my_seed( myid, 
+			num_procs,
+			(long)4*NUM_KEYS,
+			seed,
+			an );
 
-		k = MAX_KEY/4;
+	k = MAX_KEY/4;
 
-		for(i=k1; i<k2; i++){
-			x = randlc(&s, an);
-			x += randlc(&s, an);
-			x += randlc(&s, an);
-			x += randlc(&s, an);
-			key_array[i] = k*x;
-		}
-	} /*omp parallel*/
+	for(i=k1; i<k2; i++){
+		x = randlc(&s, an);
+		x += randlc(&s, an);
+		x += randlc(&s, an);
+		x += randlc(&s, an);
+		key_array[i] = k*x;
+	}
 }
 
 /*****************************************************************/
@@ -508,7 +503,6 @@ void full_verify(){
 
 #ifdef USE_BUCKETS
 	/* Buckets are already sorted. Sorting keys within each bucket */
-	#pragma omp parallel for private(i,j,k,k1) schedule(dynamic)
 	for( j=0; j< NUM_BUCKETS; j++ ) {
 		k1 = (j > 0)? bucket_ptrs[j-1] : 0;
 		for ( i = k1; i < bucket_ptrs[j]; i++ ) {
@@ -535,7 +529,6 @@ void full_verify(){
 
 	/* Confirm keys correctly sorted: count incorrectly sorted keys, if any */
 	j = 0;
-	#pragma omp parallel for reduction(+:j)
 	for( i=1; i<NUM_KEYS; i++ )
 		if( key_array[i-1] > key_array[i] )
 			j++;
@@ -574,82 +567,73 @@ void rank(int iteration){
 #endif
 	key_buff_ptr = key_buff1;
 
+	INT_TYPE *work_buff, m, k1, k2;
+	int myid = 0, num_procs = 1;
 
 	/* Bucket sort is known to improve cache performance on some */
 	/* cache based systems.  But the actual performance may depend */
 	/* on cache size, problem size. */
 #ifdef USE_BUCKETS
-	#pragma omp parallel private(i, k)
-	{
-		INT_TYPE *work_buff, m, k1, k2;
+	work_buff = bucket_size[myid];
 
-		int myid = omp_get_thread_num();
-		int num_procs = omp_get_num_threads();
+	/* Initialize */
+	for( i=0; i<NUM_BUCKETS; i++ )  
+		work_buff[i] = 0;
 
-		work_buff = bucket_size[myid];
+	/* Determine the number of keys in each bucket */
+	for( i=0; i<NUM_KEYS; i++ )
+		work_buff[key_array[i] >> shift]++;
 
-		/* Initialize */
-		for( i=0; i<NUM_BUCKETS; i++ )  
-			work_buff[i] = 0;
+	/* Accumulative bucket sizes are the bucket pointers. */
+	/* These are global sizes accumulated upon to each bucket */
+	bucket_ptrs[0] = 0;
+	for( k=0; k< myid; k++ )  
+		bucket_ptrs[0] += bucket_size[k][0];
 
-		/* Determine the number of keys in each bucket */
-		#pragma omp for schedule(static)
-		for( i=0; i<NUM_KEYS; i++ )
-			work_buff[key_array[i] >> shift]++;
+	for( i=1; i< NUM_BUCKETS; i++ ) { 
+		bucket_ptrs[i] = bucket_ptrs[i-1];
+		for( k=0; k< myid; k++ )
+			bucket_ptrs[i] += bucket_size[k][i];
+		for( k=myid; k< num_procs; k++ )
+			bucket_ptrs[i] += bucket_size[k][i-1];
+	}
 
-		/* Accumulative bucket sizes are the bucket pointers. */
-		/* These are global sizes accumulated upon to each bucket */
-		bucket_ptrs[0] = 0;
-		for( k=0; k< myid; k++ )  
-			bucket_ptrs[0] += bucket_size[k][0];
+	/* Sort into appropriate bucket */
+	for( i=0; i<NUM_KEYS; i++ ){
+		k = key_array[i];
+		key_buff2[bucket_ptrs[k >> shift]++] = k;
+	}
 
-		for( i=1; i< NUM_BUCKETS; i++ ) { 
-			bucket_ptrs[i] = bucket_ptrs[i-1];
-			for( k=0; k< myid; k++ )
+	/* The bucket pointers now point to the final accumulated sizes */
+	if (myid < num_procs-1) {
+		for( i=0; i< NUM_BUCKETS; i++ )
+			for( k=myid+1; k< num_procs; k++ )
 				bucket_ptrs[i] += bucket_size[k][i];
-			for( k=myid; k< num_procs; k++ )
-				bucket_ptrs[i] += bucket_size[k][i-1];
-		}
+	}
 
-		/* Sort into appropriate bucket */
-		#pragma omp for schedule(static)
-		for( i=0; i<NUM_KEYS; i++ ){
-			k = key_array[i];
-			key_buff2[bucket_ptrs[k >> shift]++] = k;
-		}
-
-		/* The bucket pointers now point to the final accumulated sizes */
-		if (myid < num_procs-1) {
-			for( i=0; i< NUM_BUCKETS; i++ )
-				for( k=myid+1; k< num_procs; k++ )
-					bucket_ptrs[i] += bucket_size[k][i];
-		}
-
-		/* Now, buckets are sorted.  We only need to sort keys inside */
-		/* each bucket, which can be done in parallel.  Because the distribution */
-		/* of the number of keys in the buckets is Gaussian, the use of */
-		/* a dynamic schedule should improve load balance, thus, performance */
-		#pragma omp for schedule(dynamic)
-		for( i=0; i< NUM_BUCKETS; i++ ) {
-			/* Clear the work array section associated with each bucket */
-			k1 = i * num_bucket_keys;
-			k2 = k1 + num_bucket_keys;
-			for ( k = k1; k < k2; k++ )
-				key_buff_ptr[k] = 0;
-			/* Ranking of all keys occurs in this section: */
-			/* In this section, the keys themselves are used as their */
-			/* own indexes to determine how many of each there are: their */
-			/* individual population */
-			m = (i > 0)? bucket_ptrs[i-1] : 0;
-			for ( k = m; k < bucket_ptrs[i]; k++ )
-				key_buff_ptr[key_buff_ptr2[k]]++; /* Now they have individual key population */
-			/* To obtain ranks of each key, successively add the individual key */
-			/* population, not forgetting to add m, the total of lesser keys, */
-			/* to the first key population */
-			key_buff_ptr[k1] += m;
-			for ( k = k1+1; k < k2; k++ )
-				key_buff_ptr[k] += key_buff_ptr[k-1];
-		}
+	/* Now, buckets are sorted.  We only need to sort keys inside */
+	/* each bucket, which can be done in parallel.  Because the distribution */
+	/* of the number of keys in the buckets is Gaussian, the use of */
+	/* a dynamic schedule should improve load balance, thus, performance */
+	for( i=0; i< NUM_BUCKETS; i++ ) {
+		/* Clear the work array section associated with each bucket */
+		k1 = i * num_bucket_keys;
+		k2 = k1 + num_bucket_keys;
+		for ( k = k1; k < k2; k++ )
+			key_buff_ptr[k] = 0;
+		/* Ranking of all keys occurs in this section: */
+		/* In this section, the keys themselves are used as their */
+		/* own indexes to determine how many of each there are: their */
+		/* individual population */
+		m = (i > 0)? bucket_ptrs[i-1] : 0;
+		for ( k = m; k < bucket_ptrs[i]; k++ )
+			key_buff_ptr[key_buff_ptr2[k]]++; /* Now they have individual key population */
+		/* To obtain ranks of each key, successively add the individual key */
+		/* population, not forgetting to add m, the total of lesser keys, */
+		/* to the first key population */
+		key_buff_ptr[k1] += m;
+		for ( k = k1+1; k < k2; k++ )
+			key_buff_ptr[k] += key_buff_ptr[k-1];
 	}
 #else /*USE_BUCKETS*/
 	work_buff = key_buff1_aptr[myid];

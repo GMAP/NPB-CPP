@@ -39,7 +39,7 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-*/
+*/ 
 
 #include <cstdlib>
 #include <cstdio>
@@ -61,8 +61,6 @@ void c_print_results(char* name,
 		char* npbversion,
 		char* compiletime,
 		char* compilerversion,
-		char* libversion,
-		char* totalthreads,
 		char* cc,
 		char* clink,
 		char* c_lib,
@@ -100,7 +98,6 @@ void c_print_results(char* name,
 			printf(" Size            =           %4dx%4dx%4d\n", n1, n2, n3);
 		}
 	}	
-	printf(" Total threads   =             %12s\n", totalthreads);
 	printf(" Iterations      =             %12d\n", niter); 
 	printf(" Time in seconds =             %12.2f\n", t);
 	printf(" Mop/s total     =             %12.2f\n", mops);
@@ -113,9 +110,8 @@ void c_print_results(char* name,
 		printf(" Verification    =             UNSUCCESSFUL\n");
 	}
 	printf(" Version         =             %12s\n", npbversion);
-	printf(" Compile date    =             %12s\n", compiletime);
 	printf(" Compiler ver    =             %12s\n", compilerversion);
-	printf(" OpenMP version  =             %12s\n", libversion);
+	printf(" Compile date    =             %12s\n", compiletime);
 	printf("\n Compile options:\n");
 	printf("    CC           = %s\n", cc);
 	printf("    CLINK        = %s\n", clink);

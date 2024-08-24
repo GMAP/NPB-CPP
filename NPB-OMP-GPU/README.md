@@ -26,7 +26,7 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
             Júnior Löff (PUCRS)
 
       In case of questions or problems, please send an e-mail to us:	
-        dalvan.griebler@acad.pucrs.br
+        dalvan.griebler@pucrs.br
         gabriell.araujo@edu.pucrs.br			
         junior.loff@edu.pucrs.br				
 

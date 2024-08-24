@@ -34,7 +34,6 @@ Authors of the Fortran code:
 	P. O. Frederickson
 	D. H. Bailey
 	A. C. Woo
-	H. Jin
 
 ------------------------------------------------------------------------------
 
@@ -45,18 +44,8 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
+*/ 
 
-------------------------------------------------------------------------------
-
-The OpenMP version is a parallel implementation of the serial C++ version
-OpenMP version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-OMP
-
-Authors of the OpenMP code:
-	Júnior Löff <loffjh@gmail.com>
-	
-*/
-
-#include "omp.h"
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"
 
@@ -89,7 +78,6 @@ static double q[NQ];
 static double (*x)=(double*)malloc(sizeof(double)*(NK_PLUS));
 static double (*q)=(double*)malloc(sizeof(double)*(NQ));
 #endif
-
 
 /* ep */
 int main(int argc, char **argv){
@@ -126,7 +114,7 @@ int main(int argc, char **argv){
 	j = 14;
 	if(size[j]=='.'){j--;}
 	size[j+1] = '\0';
-	printf("\n\n NAS Parallel Benchmarks 4.1 Parallel C++ version with OpenMP - EP Benchmark\n\n");
+	printf("\n\n NAS Parallel Benchmarks 4.1 Serial C++ version - EP Benchmark\n\n");
 	printf(" Number of random numbers generated: %15s\n", size);
 
 	verified = FALSE;
@@ -184,67 +172,49 @@ int main(int argc, char **argv){
 	 */
 	k_offset = -1;
 
-    #pragma omp parallel
-    {
-        double t1, t2, t3, t4, x1, x2;
-        int kk, i, ik, l;
-        double qq[NQ];		/* private copy of q[0:NQ-1] */
-        double x[NK_PLUS];
+	for(k=1; k<=np; k++){
+		kk = k_offset + k;
+		t1 = S;
+		t2 = an;
 
-        for (i = 0; i < NQ; i++) qq[i] = 0.0;
-
-       	#pragma omp for reduction(+:sx,sy)
-		for(k=1; k<=np; k++){
-			kk = k_offset + k;
-			t1 = S;
-			t2 = an;
-			int thread_id = omp_get_thread_num();
-
-			/* find starting seed t1 for this kk */
-			for(i=1; i<=100; i++){
-				ik = kk / 2;
-				if((2*ik)!=kk){t3=randlc(&t1,t2);}
-				if(ik==0){break;}
-				t3=randlc(&t2,t2);
-				kk=ik;
-			}
-
-			/* compute uniform pseudorandom numbers */
-
-			if(timers_enabled && thread_id==0){timer_start(2);}
-			vranlc(2*NK, &t1, A, x);
-			if(timers_enabled && thread_id==0){timer_stop(2);}
-			
-
-			/*
-			 * compute gaussian deviates by acceptance-rejection method and
-			 * tally counts in concentric square annuli. this loop is not
-			 * vectorizable.
-			 */
-			if(timers_enabled && thread_id==0){timer_start(1);}
-			for(i=0; i<NK; i++){
-				x1 = 2.0 * x[2*i] - 1.0;
-				x2 = 2.0 * x[2*i+1] - 1.0;
-				t1 = pow2(x1) + pow2(x2);
-				if(t1 <= 1.0){
-					t2 = sqrt(-2.0 * log(t1) / t1);
-					t3 = (x1 * t2);
-					t4 = (x2 * t2);
-					l = max(fabs(t3), fabs(t4));
-					qq[l] += 1.0;
-					sx = sx + t3;
-					sy = sy + t4;
-				}
-			}
-			if(timers_enabled && thread_id==0){timer_stop(1);}
+		/* find starting seed t1 for this kk */
+		for(i=1; i<=100; i++){
+			ik = kk / 2;
+			if((2*ik)!=kk){t3=randlc(&t1,t2);}
+			if(ik==0){break;}
+			t3=randlc(&t2,t2);
+			kk=ik;
 		}
 
-		#pragma omp critical
-        {
-            for (i = 0; i <= NQ - 1; i++) q[i] += qq[i];
-        }
+		/* compute uniform pseudorandom numbers */
+		if(timers_enabled){timer_start(2);}
+		vranlc(2*NK, &t1, A, x);
+		if(timers_enabled){timer_stop(2);}
 
-	} /* end of parallel region */
+		/*
+		 * compute gaussian deviates by acceptance-rejection method and
+		 * tally counts in concentric square annuli. this loop is not
+		 * vectorizable.
+		 */
+
+		if(timers_enabled){timer_start(1);}
+
+		for(i=0; i<NK; i++){
+			x1 = 2.0 * x[2*i] - 1.0;
+			x2 = 2.0 * x[2*i+1] - 1.0;
+			t1 = pow2(x1) + pow2(x2);
+			if(t1 <= 1.0){
+				t2 = sqrt(-2.0 * log(t1) / t1);
+				t3 = (x1 * t2);
+				t4 = (x2 * t2);
+				l = max(fabs(t3), fabs(t4));
+				q[l] += 1.0;
+				sx = sx + t3;
+				sy = sy + t4;
+			}
+		}
+		if(timers_enabled){timer_stop(1);}
+	}
 
 	for(i=0; i<=NQ-1; i++){
 		gc = gc + q[i];
@@ -296,7 +266,6 @@ int main(int argc, char **argv){
 		printf("%3d%15.0f\n", i, q[i]);
 	}
 
-	setenv("OMP_NUM_THREADS","1",0);
 	c_print_results((char*)"EP",
 			CLASS,
 			M+1,
@@ -310,8 +279,6 @@ int main(int argc, char **argv){
 			(char*)NPBVERSION,
 			(char*)COMPILETIME,
 			(char*)COMPILERVERSION,
-			(char*)LIBVERSION,
-			std::getenv("OMP_NUM_THREADS"),
 			(char*)CS1,
 			(char*)CS2,
 			(char*)CS3,

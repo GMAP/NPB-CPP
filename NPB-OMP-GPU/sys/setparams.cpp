@@ -41,7 +41,6 @@ Authors of the C++ code:
  	Júnior Löff <loffjh@gmail.com>
 */ 
 
-
 /* 
  * this utility configures a NPB to be built for a specific class. 
  * it creates a file "npbparams.h" 
@@ -74,7 +73,6 @@ Authors of the C++ code:
  * make CLASS=a and make CLASS=A will produce different binaries.
  */
 
-#include <omp.h>
 #include <sys/types.h>
 #include <cstdlib>
 #include <cstdio>
@@ -692,8 +690,6 @@ void write_compiler_info(int type, FILE *fp){
 #else
 	sprintf(tmp2, "not found");	
 #endif
-	char tmp3[10];
-	sprintf(tmp3, "%d", _OPENMP);
 
 	switch(type){
 		case FT:
@@ -706,7 +702,6 @@ void write_compiler_info(int type, FILE *fp){
       	case IS:
 			put_def_string(fp, (char*)"COMPILETIME", compiletime);
 			put_def_string(fp, (char*)"NPBVERSION", (char*)VERSION);
-			put_def_string(fp, (char*)"LIBVERSION", (char*)tmp3);
 			put_def_string(fp, (char*)"COMPILERVERSION", (char*)tmp2);
 			put_def_string(fp, (char*)"CS1", cc);
 			put_def_string(fp, (char*)"CS2", clink);

@@ -33,7 +33,6 @@ The original NPB 3.4.1 version was written in Fortran and belongs to:
 Authors of the Fortran code:
 	D. Bailey
 	W. Saphir
-	H. Jin
 
 ------------------------------------------------------------------------------
 
@@ -44,18 +43,8 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-
-------------------------------------------------------------------------------
-
-The OpenMP version is a parallel implementation of the serial C++ version
-OpenMP version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-OMP
-
-Authors of the OpenMP code:
-	Júnior Löff <loffjh@gmail.com>
-	
 */
 
-#include "omp.h"
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"
 
@@ -263,8 +252,8 @@ int main(int argc, char **argv){
 	compute_indexmap(twiddle, dims[0], dims[1], dims[2]);
 	compute_initial_conditions(u1, dims[0], dims[1], dims[2]);
 	fft_init(MAXDIM);
-	#pragma omp parallel
-		fft(1, u1, u0);
+	fft(1, u1, u0);
+
 	/*
 	 * ---------------------------------------------------------------------
 	 * start over from the beginning. note that all operations must
@@ -284,62 +273,23 @@ int main(int argc, char **argv){
 
 	fft_init(MAXDIM);
 
-	#pragma omp parallel private(iter) firstprivate(niter)
-    {
-		if(timers_enabled==TRUE){
-			#pragma omp master
-				timer_stop(T_SETUP);
-		}
-		if(timers_enabled==TRUE){
-			#pragma omp master
-				timer_start(T_FFT);
-		}
+	if(timers_enabled==TRUE){timer_stop(T_SETUP);}
+	if(timers_enabled==TRUE){timer_start(T_FFT);}
+	fft(1, u1, u0);
+	if(timers_enabled==TRUE){timer_stop(T_FFT);}
 
-		fft(1, u1, u0);
+	for(iter=1; iter<=niter; iter++){
+		if(timers_enabled==TRUE){timer_start(T_EVOLVE);}
+		evolve(u0, u1, twiddle, dims[0], dims[1], dims[2]);
+		if(timers_enabled==TRUE){timer_stop(T_EVOLVE);}
+		if(timers_enabled==TRUE){timer_start(T_FFT);}
+		fft(-1, u1, u1);
+		if(timers_enabled==TRUE){timer_stop(T_FFT);}
+		if(timers_enabled==TRUE){timer_start(T_CHECKSUM);}
+		checksum(iter, u1, dims[0], dims[1], dims[2]);
+		if(timers_enabled==TRUE){timer_stop(T_CHECKSUM);}
+	}
 
-		if(timers_enabled==TRUE){
-			#pragma omp master
-				timer_stop(T_FFT);
-		}
-
-		for(iter=1; iter<=niter; iter++){
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_start(T_EVOLVE);
-			}
-
-			evolve(u0, u1, twiddle, dims[0], dims[1], dims[2]);
-			
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_stop(T_EVOLVE);
-			}
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_start(T_FFT);
-			}
-
-			fft(-1, u1, u1);
-
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_stop(T_FFT);
-			}
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_start(T_CHECKSUM);
-			}
-
-			#pragma omp barrier
-			checksum(iter, u1, dims[0], dims[1], dims[2]);
-
-			if(timers_enabled==TRUE){
-				#pragma omp master
-					timer_stop(T_CHECKSUM);
-			}
-		}
-	} /* end parallel */
-	
 	verify(NX, NY, NZ, niter, &verified, &class_npb);
 
 	timer_stop(T_TOTAL);
@@ -353,7 +303,6 @@ int main(int argc, char **argv){
 	}else{
 		mflops = 0.0;
 	}
-	setenv("OMP_NUM_THREADS","1",0);
 	c_print_results((char*)"FT",
 			class_npb,
 			NX,
@@ -367,8 +316,6 @@ int main(int argc, char **argv){
 			(char*)NPBVERSION,
 			(char*)COMPILETIME,
 			(char*)COMPILERVERSION,
-			(char*)LIBVERSION,
-			std::getenv("OMP_NUM_THREADS"),
 			(char*)CS1,
 			(char*)CS2,
 			(char*)CS3,
@@ -397,13 +344,7 @@ static void cffts1(int is,
 
 	logd1 = ilog2(d1);
 
-	
-	if(timers_enabled){
-		#pragma omp master
-			timer_start(T_FFTX);
-	}
-	
-	#pragma omp for	
+	if(timers_enabled){timer_start(T_FFTX);}
 	for(k=0; k<d3; k++){
 		for(jj=0; jj<=d2-FFTBLOCK; jj+=FFTBLOCK){
 			for(j=0; j<FFTBLOCK; j++){
@@ -419,11 +360,7 @@ static void cffts1(int is,
 			}
 		}
 	}
-
-	if(timers_enabled){
-		#pragma omp master
-			timer_stop(T_FFTX);
-	}
+	if(timers_enabled){timer_stop(T_FFTX);}
 }
 
 static void cffts2(int is,
@@ -442,12 +379,7 @@ static void cffts2(int is,
 
 	logd2 = ilog2(d2);
 
-	if(timers_enabled){
-		#pragma omp master
-			timer_start(T_FFTY);
-	}
-
-	#pragma omp for	
+	if(timers_enabled){timer_start(T_FFTY);}
 	for(k=0; k<d3; k++){
 		for(ii=0; ii<=d1-FFTBLOCK; ii+=FFTBLOCK){
 			for(j=0; j<d2; j++){
@@ -463,11 +395,7 @@ static void cffts2(int is,
 			}
 		}
 	}
-
-	if(timers_enabled){
-		#pragma omp master
-			timer_stop(T_FFTY);
-	}
+	if(timers_enabled){timer_stop(T_FFTY);}
 }
 
 static void cffts3(int is,
@@ -486,12 +414,7 @@ static void cffts3(int is,
 
 	logd3 = ilog2(d3);
 
-	if(timers_enabled){
-		#pragma omp master
-			timer_start(T_FFTZ);
-	}
-
-	#pragma omp for
+	if(timers_enabled){timer_start(T_FFTZ);}
 	for(j=0; j<d2; j++){
 		for(ii=0; ii<=d1-FFTBLOCK; ii+=FFTBLOCK){
 			for(k=0; k<d3; k++){
@@ -507,11 +430,7 @@ static void cffts3(int is,
 			}
 		}
 	}
-
-	if(timers_enabled){
-		#pragma omp master
-			timer_stop(T_FFTZ);
-	}
+	if(timers_enabled){timer_stop(T_FFTZ);}
 }
 
 /*
@@ -572,33 +491,18 @@ static void checksum(int i,
 		int d1,
 		int d2,
 		int d3){
-
 	dcomplex (*u1)[NY][NX] = (dcomplex(*)[NY][NX])pointer_u1;
 	int j,q,r,s;
-	dcomplex chk_worker = dcomplex_create(0.0, 0.0);
-	static dcomplex chk;
-
-	#pragma omp single
-		chk = dcomplex_create(0.0, 0.0);
-
-	#pragma omp for
+	dcomplex chk = dcomplex_create(0.0, 0.0);
 	for(j=1; j<=1024; j++){
 		q = j % NX;
 		r = (3*j) % NY;
 		s = (5*j) % NZ;
-		chk_worker = dcomplex_add(chk_worker, u1[s][r][q]);
+		chk = dcomplex_add(chk, u1[s][r][q]);
 	}
-
-	#pragma omp critical
-		chk = dcomplex_add(chk, chk_worker);
-	
-	#pragma omp barrier
-	#pragma omp single
-	{
-		chk = dcomplex_div2(chk, (double)(NTOTAL));
-		printf(" T =%5d     Checksum =%22.12e%22.12e\n", i, chk.real, chk.imag);
-		sums[i] = chk;
-	}
+	chk = dcomplex_div2(chk, (double)(NTOTAL));
+	printf(" T =%5d     Checksum =%22.12e%22.12e\n", i, chk.real, chk.imag);
+	sums[i] = chk;
 }
 
 /*
@@ -625,7 +529,6 @@ static void compute_indexmap(void* pointer_twiddle,
 	 * ---------------------------------------------------------------------
 	 */
 	ap = - 4.0 * ALPHA * PI * PI;
-	#pragma omp parallel for private(i,j,kk,kk2,jj,kj2,ii)
 	for(k=0; k<d3; k++){
 		kk = ((k+NZ/2) % NZ) - NZ/2;
 		kk2 = kk*kk;
@@ -676,7 +579,6 @@ static void compute_initial_conditions(void* pointer_u0,
 	 * go through by z planes filling in one square at a time.
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp parallel for private(k,j,x0)
 	for(k=0; k<dims[2]; k++){
 		x0 = starts[k];
 		for(j=0; j<dims[1]; j++){			
@@ -701,7 +603,6 @@ static void evolve(void* pointer_u0,
 	double (*twiddle)[NY][NX] = (double(*)[NY][NX])pointer_twiddle;
 
 	int i, j, k;
-	#pragma omp for
 	for(k=0; k<d3; k++){
 		for(j=0; j<d2; j++){
 			for(i=0; i<d1; i++){
@@ -865,7 +766,6 @@ static void init_ui(void* pointer_u0,
 	double (*twiddle)[NY][NX] = (double(*)[NY][NX])pointer_twiddle;
 
 	int i, j, k;
-	#pragma omp parallel for private(i,j,k)
 	for(k=0; k<d3; k++){
 		for(j=0; j<d2; j++){
 			for(i=0; i<d1; i++){
@@ -950,7 +850,7 @@ static void setup(){
 
 	niter = NITER_DEFAULT;
 
-	printf("\n\n NAS Parallel Benchmarks 4.1 Parallel C++ version with OpenMP - FT Benchmark\n\n");
+	printf("\n\n NAS Parallel Benchmarks 4.1 Serial C++ version - FT Benchmark\n\n");
 	printf(" Size                : %4dx%4dx%4d\n", NX, NY, NZ);
 	printf(" Iterations                  :%7d\n", niter);
 	printf("\n");

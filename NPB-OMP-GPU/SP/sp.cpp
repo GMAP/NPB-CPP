@@ -44,18 +44,8 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-
-------------------------------------------------------------------------------
-
-The OpenMP version is a parallel implementation of the serial C++ version
-OpenMP version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-OMP
-
-Authors of the OpenMP code:
-	Júnior Löff <loffjh@gmail.com>
-	
 */
 
-#include "omp.h"
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"
 
@@ -222,7 +212,7 @@ int main(int argc, char* argv[]){
 	}else{
 		timeron = FALSE;
 	}	
-	printf("\n\n NAS Parallel Benchmarks 4.1 Parallel C++ version with OpenMP - SP Benchmark\n\n");
+	printf("\n\n NAS Parallel Benchmarks 4.1 Serial C++ version - SP Benchmark\n\n");
 	printf(" Size: %4dx%4dx%4d\n",grid_points[0],grid_points[1],grid_points[2]);
 	printf(" Iterations: %4d    dt: %10.6f\n",niter,dt);
 	printf("\n");
@@ -243,22 +233,13 @@ int main(int argc, char* argv[]){
 	 * do one time step to touch all code, and reinitialize
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp parallel
-  	{
-		adi();
-	}
+	adi();
 	initialize();
 	for(i=1;i<=T_LAST;i++){timer_clear(i);}
 	timer_start(1);
-	#pragma omp parallel firstprivate(niter) private(step)
-  	{
-		for(step=1;step<=niter;step++){
-			if((step%20)==0||step==1){
-				#pragma omp master
-					printf(" Time step %4d\n",step);
-			}
-			adi();
-		}
+	for(step=1;step<=niter;step++){
+		if((step%20)==0||step==1){printf(" Time step %4d\n",step);}
+		adi();
 	}
 	timer_stop(1);
 	tmax=timer_read(1);
@@ -273,7 +254,6 @@ int main(int argc, char* argv[]){
 	}else{
 		mflops=0.0;
 	}
-	setenv("OMP_NUM_THREADS","1",0);
 	c_print_results((char*)"SP",
 			class_npb,
 			grid_points[0],
@@ -287,8 +267,6 @@ int main(int argc, char* argv[]){
 			(char*)NPBVERSION,
 			(char*)COMPILETIME,
 			(char*)COMPILERVERSION,
-			(char*)LIBVERSION,
-			std::getenv("OMP_NUM_THREADS"),
 			(char*)CS1,
 			(char*)CS2,
 			(char*)CS3,
@@ -333,10 +311,7 @@ int main(int argc, char* argv[]){
  */
 void add(){
 	int i, j, k, m;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_ADD);}
-	#pragma omp for
+	if(timeron){timer_start(T_ADD);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -346,7 +321,7 @@ void add(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_ADD);}
+	if(timeron){timer_stop(T_ADD);}
 }
 
 void adi(){
@@ -361,16 +336,13 @@ void adi(){
 void compute_rhs(){
 	int i, j, k, m;
 	double aux, rho_inv, uijk, up1, um1, vijk, vp1, vm1, wijk, wp1, wm1;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_RHS);}
+	if(timeron){timer_start(T_RHS);}
 	/*
 	 * ---------------------------------------------------------------------
 	 * compute the reciprocal of density, and the kinetic energy, 
 	 * and the speed of sound. 
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=0; k<=grid_points[2]-1; k++){
 		for(j=0; j<=grid_points[1]-1; j++){
 			for(i=0; i<=grid_points[0]-1; i++){
@@ -401,7 +373,6 @@ void compute_rhs(){
 	 * including the boundary                   
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=0; k<=grid_points[2]-1; k++){
 		for(j=0; j<=grid_points[1]-1; j++){
 			for(i=0; i<=grid_points[0]-1; i++){
@@ -416,8 +387,7 @@ void compute_rhs(){
 	 * compute xi-direction fluxes 
 	 * ---------------------------------------------------------------------
 	 */
-	if(timeron && thread_id==0){timer_start(T_RHSX);}
-	#pragma omp for
+	if(timeron){timer_start(T_RHSX);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -494,14 +464,13 @@ void compute_rhs(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_RHSX);}
+	if(timeron){timer_stop(T_RHSX);}
 	/*
 	 * ---------------------------------------------------------------------
 	 * compute eta-direction fluxes 
 	 * ---------------------------------------------------------------------
 	 */
-	if(timeron && thread_id==0){timer_start(T_RHSY);}
-	#pragma omp for
+	if(timeron){timer_start(T_RHSY);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -582,14 +551,13 @@ void compute_rhs(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_RHSY);}
+	if(timeron){timer_stop(T_RHSY);}
 	/*
 	 * ---------------------------------------------------------------------
 	 * compute zeta-direction fluxes 
 	 * ---------------------------------------------------------------------
 	 */
-	if(timeron && thread_id==0){timer_start(T_RHSZ);}
-	#pragma omp for
+	if(timeron){timer_start(T_RHSZ);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -631,7 +599,6 @@ void compute_rhs(){
 	 * ---------------------------------------------------------------------
 	 */
 	k=1;
-	#pragma omp for
 	for(j=1; j<=ny2; j++){
 		for(i=1; i<=nx2; i++){
 			for(m=0; m<5; m++){
@@ -641,7 +608,6 @@ void compute_rhs(){
 		}
 	}
 	k=2;
-	#pragma omp for
 	for(j=1; j<=ny2; j++){
 		for(i=1; i<=nx2; i++){
 			for(m=0; m<5; m++){
@@ -651,7 +617,6 @@ void compute_rhs(){
 			}
 		}
 	}
-	#pragma omp for
 	for(k=3; k<=nz2-2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -665,7 +630,6 @@ void compute_rhs(){
 		}
 	}
 	k=nz2-1;
-	#pragma omp for
 	for(j=1; j<=ny2; j++){
 		for(i=1; i<=nx2; i++){
 			for(m=0; m<5; m++){
@@ -676,7 +640,6 @@ void compute_rhs(){
 		}
 	}
 	k=nz2;
-	#pragma omp for
 	for(j=1; j<=ny2; j++){
 		for(i=1; i<=nx2; i++){
 			for(m=0; m<5; m++){
@@ -685,8 +648,7 @@ void compute_rhs(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_RHSZ);}
-	#pragma omp for
+	if(timeron){timer_stop(T_RHSZ);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -696,7 +658,7 @@ void compute_rhs(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_RHS);}
+	if(timeron){timer_stop(T_RHS);}
 }
 
 /*
@@ -1271,10 +1233,7 @@ void lhsinitj(int nj, int ni){
 void ninvr(){
 	int i, j, k;
 	double r1, r2, r3, r4, r5, t1, t2;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_NINVR);}
-	#pragma omp for
+	if(timeron){timer_start(T_NINVR);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -1293,7 +1252,7 @@ void ninvr(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_NINVR);}
+	if(timeron){timer_stop(T_NINVR);}
 }
 
 /*
@@ -1304,10 +1263,7 @@ void ninvr(){
 void pinvr(){
 	int i, j, k;
 	double r1, r2, r3, r4, r5, t1, t2;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_PINVR);}
-	#pragma omp for
+	if(timeron){timer_start(T_PINVR);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -1326,7 +1282,7 @@ void pinvr(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_PINVR);}
+	if(timeron){timer_stop(T_PINVR);}
 }
 
 void rhs_norm(double rms[]){
@@ -1551,10 +1507,7 @@ void set_constants(){
 void txinvr(){
 	int i, j, k;
 	double t1, t2, t3, ac, ru1, uu, vv, ww, r1, r2, r3, r4, r5, ac2inv;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_TXINVR);}
-	#pragma omp for
+	if(timeron){timer_start(T_TXINVR);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -1580,7 +1533,7 @@ void txinvr(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_TXINVR);}
+	if(timeron){timer_stop(T_TXINVR);}
 }
 
 /*
@@ -1591,10 +1544,7 @@ void txinvr(){
 void tzetar(){
 	int i, j, k;
 	double t1, t2, t3, ac, xvel, yvel, zvel, r1, r2, r3, r4, r5, btuz, ac2u, uzik1;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_TZETAR);}
-	#pragma omp for
+	if(timeron){timer_start(T_TZETAR);}
 	for(k=1; k<=nz2; k++){
 		for(j=1; j<=ny2; j++){
 			for(i=1; i<=nx2; i++){
@@ -1622,7 +1572,7 @@ void tzetar(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_TZETAR);}
+	if(timeron){timer_stop(T_TZETAR);}
 }
 
 /*
@@ -1933,34 +1883,9 @@ void verify(int no_time_steps, char* class_npb, boolean* verified){
 void x_solve(){
 	int i, j, k, i1, i2, m;
 	double ru1, fac1, fac2;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_XSOLVE);}
-
-	#pragma omp for
+	if(timeron){timer_start(T_XSOLVE);}
 	for(k=1; k<=nz2; k++){
-		double cv[PROBLEM_SIZE], rhon[PROBLEM_SIZE];
-		double lhs[IMAXP+1][IMAXP+1][5];
-		double lhsp[IMAXP+1][IMAXP+1][5];
-		double lhsm[IMAXP+1][IMAXP+1][5];
-
-		for(j=1; j<=ny2; j++){
-			for(m=0; m<5; m++){
-				lhs[j][0][m]=0.0;
-				lhsp[j][0][m]=0.0;
-				lhsm[j][0][m]=0.0;
-				lhs[j][nx2+1][m]=0.0;
-				lhsp[j][nx2+1][m]=0.0;
-				lhsm[j][nx2+1][m]=0.0;
-			}
-			lhs[j][0][2]=1.0;
-			lhsp[j][0][2]=1.0;
-			lhsm[j][0][2]=1.0;
-			lhs[j][nx2+1][2]=1.0;
-			lhsp[j][nx2+1][2]=1.0;
-			lhsm[j][nx2+1][2]=1.0;
-		}
-
+		lhsinit(nx2+1, ny2);
 		/*
 		 * ---------------------------------------------------------------------
 		 * computes the left hand side for the three x-factors  
@@ -2203,7 +2128,7 @@ void x_solve(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_XSOLVE);}
+	if(timeron){timer_stop(T_XSOLVE);}
 	/*
 	 * ---------------------------------------------------------------------
 	 * do the block-diagonal inversion          
@@ -2223,33 +2148,9 @@ void x_solve(){
 void y_solve(){
 	int i, j, k, j1, j2, m;
 	double ru1, fac1, fac2;
-	int thread_id = omp_get_thread_num();
-
-	if(timeron && thread_id==0){timer_start(T_YSOLVE);}
-	#pragma omp for
+	if(timeron){timer_start(T_YSOLVE);}
 	for(k=1; k<=grid_points[2]-2; k++){
-		double cv[PROBLEM_SIZE], rhoq[PROBLEM_SIZE];
-		double lhs[IMAXP+1][IMAXP+1][5];
-		double lhsp[IMAXP+1][IMAXP+1][5];
-		double lhsm[IMAXP+1][IMAXP+1][5];
-
-		for(i=1; i<=nx2; i++){
-			for(m=0; m<5; m++){
-				lhs[0][i][m]=0.0;
-				lhsp[0][i][m]=0.0;
-				lhsm[0][i][m]=0.0;
-				lhs[ny2+1][i][m]=0.0;
-				lhsp[ny2+1][i][m]=0.0;
-				lhsm[ny2+1][i][m]=0.0;
-			}
-			lhs[0][i][2]=1.0;
-			lhsp[0][i][2]=1.0;
-			lhsm[0][i][2]=1.0;
-			lhs[ny2+1][i][2]=1.0;
-			lhsp[ny2+1][i][2]=1.0;
-			lhsm[ny2+1][i][2]=1.0;
-		}
-
+		lhsinitj(ny2+1, nx2);
 		/*
 		 * ---------------------------------------------------------------------
 		 * computes the left hand side for the three y-factors   
@@ -2489,7 +2390,7 @@ void y_solve(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_YSOLVE);}
+	if(timeron){timer_stop(T_YSOLVE);}
 	pinvr();
 }
 
@@ -2504,33 +2405,9 @@ void y_solve(){
 void z_solve(){
 	int i, j, k, k1, k2, m;
 	double ru1, fac1, fac2;
-	int thread_id = omp_get_thread_num();
-	
-	if(timeron && thread_id==0){timer_start(T_ZSOLVE);}
-	#pragma omp for
+	if(timeron){timer_start(T_ZSOLVE);}
 	for(j=1; j<=ny2; j++){
-		double cv[PROBLEM_SIZE], rhos[PROBLEM_SIZE];
-		double lhs[IMAXP+1][IMAXP+1][5];
-		double lhsp[IMAXP+1][IMAXP+1][5];
-		double lhsm[IMAXP+1][IMAXP+1][5];
-
-		for(i=1; i<=nx2; i++){
-			for(m=0; m<5; m++){
-				lhs[0][i][m]=0.0;
-				lhsp[0][i][m]=0.0;
-				lhsm[0][i][m]=0.0;
-				lhs[nz2+1][i][m]=0.0;
-				lhsp[nz2+1][i][m]=0.0;
-				lhsm[nz2+1][i][m]=0.0;
-			}
-			lhs[0][i][2]=1.0;
-			lhsp[0][i][2]=1.0;
-			lhsm[0][i][2]=1.0;
-			lhs[nz2+1][i][2]=1.0;
-			lhsp[nz2+1][i][2]=1.0;
-			lhsm[nz2+1][i][2]=1.0;
-		}
-
+		lhsinitj(nz2+1, nx2);
 		/*
 		 * ---------------------------------------------------------------------
 		 * computes the left hand side for the three z-factors   
@@ -2776,6 +2653,6 @@ void z_solve(){
 			}
 		}
 	}
-	if(timeron && thread_id==0){timer_stop(T_ZSOLVE);}
+	if(timeron){timer_stop(T_ZSOLVE);}
 	tzetar();
 }

@@ -35,7 +35,6 @@ Authors of the Fortran code:
 	V. Venkatakrishnan
 	E. Barszcz
 	M. Yarrow
-	H. Jin
 
 ------------------------------------------------------------------------------
 
@@ -46,18 +45,8 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-
-------------------------------------------------------------------------------
-
-The OpenMP version is a parallel implementation of the serial C++ version
-OpenMP version: https://github.com/GMAP/NPB-CPP/tree/master/NPB-OMP
-
-Authors of the OpenMP code:
-	Júnior Löff <loffjh@gmail.com>
-	
 */
 
-#include "omp.h"
 #include "../common/npb-CPP.hpp"
 #include "npbparams.hpp"
 
@@ -221,9 +210,6 @@ void verify(double xcr[],
 		char* class_npb,
 		boolean* verified);
 
-static boolean flag[ISIZ1/2*2+1];
-static boolean flag2[ISIZ1/2*2+1];
-
 /* lu */
 int main(int argc, char* argv[]){
 #if defined(DO_NOT_ALLOCATE_ARRAYS_WITH_DYNAMIC_MEMORY_AND_AS_SINGLE_DIMENSION)
@@ -276,46 +262,37 @@ int main(int argc, char* argv[]){
 	 * ---------------------------------------------------------------------
 	 */
 	setcoeff();
-
-	#pragma omp parallel
-	{
-		/*
-		 * ---------------------------------------------------------------------
-		 * set the boundary values for dependent variables
-		 * ---------------------------------------------------------------------
-		 */
-		setbv();
-		/*
-		 * ---------------------------------------------------------------------
-		 * set the initial values for dependent variables
-		 * ---------------------------------------------------------------------
-		 */
-		setiv();
-		/*
-		 * ---------------------------------------------------------------------
-		 * compute the forcing term based on prescribed exact solution
-		 * ---------------------------------------------------------------------
-		 */
-		erhs();
-	} /* end parallel */
-
+	/*
+	 * ---------------------------------------------------------------------
+	 * set the boundary values for dependent variables
+	 * ---------------------------------------------------------------------
+	 */
+	setbv();
+	/*
+	 * ---------------------------------------------------------------------
+	 * set the initial values for dependent variables
+	 * ---------------------------------------------------------------------
+	 */
+	setiv();
+	/*
+	 * ---------------------------------------------------------------------
+	 * compute the forcing term based on prescribed exact solution
+	 * ---------------------------------------------------------------------
+	 */
+	erhs();
 	/*
 	 * ---------------------------------------------------------------------
 	 * perform one SSOR iteration to touch all pages
 	 * ---------------------------------------------------------------------
 	 */
 	ssor(1);
-	#pragma omp parallel
-	{
-		/*
-		 * ---------------------------------------------------------------------
-		 * reset the boundary and initial values
-		 * ---------------------------------------------------------------------
-		 */
-		setbv();
-		setiv();
-	}
-
+	/*
+	 * ---------------------------------------------------------------------
+	 * reset the boundary and initial values
+	 * ---------------------------------------------------------------------
+	 */
+	setbv();
+	setiv();
 	/*
 	 * ---------------------------------------------------------------------
 	 * perform the SSOR iterations
@@ -347,7 +324,6 @@ int main(int argc, char* argv[]){
 			+27770.9*(double)(nx0+ny0+nz0)/3.0
 			-144010.0)
 		/(maxtime*1000000.0);
-	setenv("OMP_NUM_THREADS","1",0);
 	c_print_results((char*)"LU",
 			class_npb,
 			nx0,
@@ -361,8 +337,6 @@ int main(int argc, char* argv[]){
 			(char*)NPBVERSION,
 			(char*)COMPILETIME,
 			(char*)COMPILERVERSION,
-			(char*)LIBVERSION,
-			std::getenv("OMP_NUM_THREADS"),
 			(char*)CS1,
 			(char*)CS2,
 			(char*)CS3,
@@ -428,8 +402,6 @@ void blts(int nx,
 	int i, j, m;
 	double tmp, tmp1;
 	double tmat[5][5], tv[5];
-
-	#pragma omp for nowait schedule(static)
 	for(j=jst; j<jend; j++){
 		for(i=ist; i<iend; i++){
 			for(m=0; m<5; m++){
@@ -442,23 +414,7 @@ void blts(int nx,
 			}
 		}
 	}
-
-	#pragma omp for nowait schedule(static)
 	for(j=jst; j<jend; j++){
-		
-	    if (j != jst) {
-	    	while (flag[j-1] == 0){ 
-		    	#pragma omp flush
-		    		;
-		    }
-	    }
-	    if (j != jend-1) {
-	    	while (flag[j] == 1){ 
-		    	#pragma omp flush
-		    		;
-		    }
-	    }
-
 		for(i=ist; i<iend; i++){
 			for(m=0; m<5; m++){
 				tv[m]=v[k][j][i][m]
@@ -576,9 +532,6 @@ void blts(int nx,
 				-tmat[4][0]*v[k][j][i][4];
 			v[k][j][i][0]=tv[0]/tmat[0][0];
 		}
-
-		if (j != jend-1) flag[j] = 1; 
-		if (j != jst) flag[j-1] = 0;
 	}
 }
 
@@ -617,8 +570,6 @@ void buts(int nx,
 	int i, j, m;
 	double tmp, tmp1;
 	double tmat[5][5];
-
-	#pragma omp for nowait schedule(static)
 	for(j=jend-1; j>=jst; j--){
 		for(i=iend-1; i>=ist; i--){
 			for(m=0; m<5; m++){
@@ -631,24 +582,7 @@ void buts(int nx,
 			}
 		}
 	}
-
-	#pragma omp for nowait schedule(static)
 	for(j=jend-1; j>=jst; j--){
-		
-		
-	    if (j != jend-1) {
-	    	while (flag2[j+1] == 0) {
-		    	#pragma omp flush
-		    		;
-	    	}
-	    }
-	    if (j != jst) {
-	    	while (flag2[j] == 1){
-		    	#pragma omp flush
-		    		;
-			}
-	    }
-
 		for(i=iend-1; i>=ist; i--){
 			for(m=0; m<5; m++){
 				tv[j][i][m]=tv[j][i][m]
@@ -768,10 +702,6 @@ void buts(int nx,
 			v[k][j][i][3]=v[k][j][i][3]-tv[j][i][3];
 			v[k][j][i][4]=v[k][j][i][4]-tv[j][i][4];
 		}
-
-		
-		if (j != jend-1) flag2[j+1] = 0;
-		if (j != jst) flag2[j] = 1; 
 	}
 }
 
@@ -843,9 +773,6 @@ void erhs(){
 	double u21im1, u31im1, u41im1, u51im1;
 	double u21jm1, u31jm1, u41jm1, u51jm1;
 	double u21km1, u31km1, u41km1, u51km1;
-	double flux[ISIZ1][5];
-
-	#pragma omp for
 	for(k=0; k<nz; k++){
 		for(j=0; j<ny; j++){
 			for(i=0; i<nx; i++){
@@ -855,8 +782,6 @@ void erhs(){
 			}
 		}
 	}
-
-	#pragma omp for
 	for(k=0; k<nz; k++){
 		zeta=((double)k)/(nz-1);
 		for(j=0; j<ny; j++){
@@ -886,7 +811,6 @@ void erhs(){
 	 * xi-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=1; k<nz-1; k++){
 		for(j=jst; j<jend; j++){
 			for(i=0; i<nx; i++){
@@ -998,7 +922,6 @@ void erhs(){
 	 * eta-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=1; k<nz-1; k++){
 		for(i=ist; i<iend; i++){
 			for(j=0; j<ny; j++){
@@ -1110,7 +1033,6 @@ void erhs(){
 	 * zeta-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(j=jst; j<jend; j++){
 		for(i=ist; i<iend; i++){
 			for(k=0; k<nz; k++){
@@ -1302,8 +1224,6 @@ void jacld(int k){
 	r43=(4.0/3.0);
 	c1345=C1*C3*C4*C5;
 	c34=C3*C4;
-
-	#pragma omp for nowait schedule(static)
 	for(j=jst; j<jend; j++){
 		for(i=ist; i<iend; i++){
 			/*
@@ -1591,10 +1511,8 @@ void jacu(int k){
 	r43=(4.0/3.0);
 	c1345=C1*C3*C4*C5;
 	c34=C3*C4;
-
-	#pragma omp for nowait schedule(static)
-	for (j=jend-1; j>=jst; j--) {
-		for (i=iend-1; i>=ist; i--) {
+	for(j=jst; j<jend; j++){
+		for(i=ist; i<iend; i++){
 			/*
 			 * ---------------------------------------------------------------------
 			 * form the block daigonal
@@ -1904,37 +1822,16 @@ void l2norm(int nx0,
 	 * ---------------------------------------------------------------------
 	 */
 	int i, j, k, m;
-	double sum0=0.0, sum1=0.0, sum2=0.0, sum3=0.0, sum4=0.0;
-
-	#pragma omp single  
-	for (m = 0; m < 5; m++) {
-		sum[m] = 0.0;
-	}
-
-	#pragma omp for nowait
+	for(m=0;m<5;m++){sum[m]=0.0;}
 	for(k=1; k<nz0-1; k++){
 		for(j=jst; j<jend; j++){
 			for(i=ist; i<iend; i++){
-				sum0 = sum0 + v[i][j][k][0] * v[i][j][k][0];
-				sum1 = sum1 + v[i][j][k][1] * v[i][j][k][1];
-				sum2 = sum2 + v[i][j][k][2] * v[i][j][k][2];
-				sum3 = sum3 + v[i][j][k][3] * v[i][j][k][3];
-				sum4 = sum4 + v[i][j][k][4] * v[i][j][k][4];
+				for(m=0; m<5; m++){
+					sum[m]=sum[m]+v[k][j][i][m]*v[k][j][i][m];
+				}
 			}
 		}
 	}
-
-	#pragma omp critical
-	{
-		sum[0] += sum0;
-		sum[1] += sum1;
-		sum[2] += sum2;
-		sum[3] += sum3;
-		sum[4] += sum4;
-	}
-	#pragma omp barrier  
-
-	#pragma omp single  
 	for(m=0; m<5; m++){
 		sum[m]=sqrt(sum[m]/((nx0-2)*(ny0-2)*(nz0-2)));
 	}
@@ -2175,7 +2072,7 @@ void read_input(){
 				"     ISIZ1, ISIZ2 AND ISIZ3 RESPECTIVELY\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("\n\n NAS Parallel Benchmarks 4.1 Parallel C++ version with OpenMP - LU Benchmark\n\n");
+	printf("\n\n NAS Parallel Benchmarks 4.1 Serial C++ version - LU Benchmark\n\n");
 	printf(" Size: %4dx%4dx%4d\n",nx0,ny0,nz0);
 	printf(" Iterations: %4d\n",itmax);
 	printf("\n");
@@ -2202,10 +2099,7 @@ void rhs(){
 	double u21im1, u31im1, u41im1, u51im1;
 	double u21jm1, u31jm1, u41jm1, u51jm1;
 	double u21km1, u31km1, u41km1, u51km1;
-	double flux[ISIZ1][5];
-
 	if(timeron){timer_start(T_RHS);}
-	#pragma omp for
 	for(k=0; k<nz; k++){
 		for(j=0; j<ny; j++){
 			for(i=0; i<nx; i++){
@@ -2227,7 +2121,6 @@ void rhs(){
 	 * xi-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=1; k<nz-1; k++){
 		for(j=jst; j<jend; j++){
 			for(i=0; i<nx; i++){
@@ -2338,7 +2231,6 @@ void rhs(){
 	 * eta-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=1; k<nz-1; k++){
 		for(i=ist; i<iend; i++){
 			for(j=0; j<ny; j++){
@@ -2455,7 +2347,6 @@ void rhs(){
 	 * zeta-direction flux differences
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(j=jst; j<jend; j++){
 		for(i=ist; i<iend; i++){
 			for(k=0; k<nz; k++){
@@ -2589,7 +2480,6 @@ void setbv(){
 	 * set the dependent variable values along the top and bottom faces
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(j=0; j<ny; j++){
 		for(i=0; i<nx; i++){
 			exact(i, j, 0, temp1);
@@ -2605,7 +2495,6 @@ void setbv(){
 	 * set the dependent variable values along north and south faces
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=0; k<nz; k++){
 		for(i=0; i<nx; i++){
 			exact(i, 0, k, temp1);
@@ -2621,7 +2510,6 @@ void setbv(){
 	 * set the dependent variable values along east and west faces
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp for
 	for(k=0; k<nz; k++){
 		for(j=0; j<ny; j++){
 			exact(0, j, k, temp1);
@@ -2789,8 +2677,6 @@ void setiv(){
 	double pxi, peta, pzeta;
 	double ue_1jk[5], ue_nx0jk[5], ue_i1k[5];
 	double ue_iny0k[5], ue_ij1[5], ue_ijnz[5];
-	
-	#pragma omp for
 	for(k=1; k<nz-1; k++){
 		zeta=((double)k)/(nz-1);
 		for(j=1; j<ny-1; j++){
@@ -2841,14 +2727,12 @@ void ssor(int niter){
 	 * ---------------------------------------------------------------------
 	 */
 	tmp=1.0/(omega*(2.0-omega));
-	
 	/*
 	 * ---------------------------------------------------------------------
 	 * initialize a,b,c,d to zero (guarantees that page tables have been
 	 * formed, if applicable on given architecture, before timestepping).
 	 * ---------------------------------------------------------------------
 	 */
-	#pragma omp parallel for private(i,j,n,m)
 	for(j=0; j<ISIZ2; j++){
 		for(i=0; i<ISIZ1; i++){
 			for(n=0; n<5; n++){
@@ -2862,272 +2746,192 @@ void ssor(int niter){
 		}
 	}
 	for(i=1;i<=T_LAST;i++){timer_clear(i);}
-
-	
-	#pragma omp parallel
-	{
+	/*
+	 * ---------------------------------------------------------------------
+	 * compute the steady-state residuals
+	 * ---------------------------------------------------------------------
+	 */
+	rhs();
+	/*
+	 * ---------------------------------------------------------------------
+	 * compute the L2 norms of newton iteration residuals
+	 * ---------------------------------------------------------------------
+	 */
+	l2norm(	nx0,
+			ny0,
+			nz0,
+			ist,
+			iend,
+			jst,
+			jend,
+			rsd,
+			rsdnm);
+	for(i=1;i<=T_LAST;i++){timer_clear(i);}
+	timer_start(1);
+	/*
+	 * ---------------------------------------------------------------------
+	 * the timestep loop
+	 * ---------------------------------------------------------------------
+	 */
+	for(istep=1; istep<=niter; istep++){
+		if((istep%20)==0||istep==itmax||istep==1){
+			if(niter>1){printf(" Time step %4d\n",istep);}
+		}
+		/*
+		 * ---------------------------------------------------------------------
+		 * perform SSOR iteration
+		 * ---------------------------------------------------------------------
+		 */
+		if(timeron){timer_start(T_RHS);}
+		for(k=1; k<nz-1; k++){
+			for(j=jst; j<jend; j++){
+				for(i=ist; i<iend; i++){
+					for(m=0; m<5; m++){
+						rsd[k][j][i][m]=dt*rsd[k][j][i][m];
+					}
+				}
+			}
+		}
+		if(timeron){timer_stop(T_RHS);}
+		for(k=1; k<nz-1; k++){
+			/*
+			 * ---------------------------------------------------------------------
+			 * form the lower triangular part of the jacobian matrix
+			 * ---------------------------------------------------------------------
+			 */
+			if(timeron){timer_start(T_JACLD);}
+			jacld(k);
+			if(timeron){timer_stop(T_JACLD);}
+			/*
+			 * ---------------------------------------------------------------------
+			 * perform the lower triangular solution
+			 * ---------------------------------------------------------------------
+			 */
+			if(timeron){timer_start(T_BLTS);}
+			blts(	nx,
+					ny,
+					nz,
+					k,
+					omega,
+					rsd,
+					a,
+					b,
+					c,
+					d,
+					ist,
+					iend,
+					jst,
+					jend,
+					nx0,
+					ny0);
+			if(timeron){timer_stop(T_BLTS);}
+		}
+		for(k=nz-2; k>0; k--){
+			/*
+			 * ---------------------------------------------------------------------
+			 * form the strictly upper triangular part of the jacobian matrix
+			 * ---------------------------------------------------------------------
+			 */
+			if(timeron){timer_start(T_JACU);}
+			jacu(k);
+			if(timeron){timer_stop(T_JACU);}
+			/*
+			 * ---------------------------------------------------------------------
+			 * perform the upper triangular solution
+			 * ---------------------------------------------------------------------
+			 */
+			if(timeron){timer_start(T_BUTS);}
+			buts(	nx,
+					ny,
+					nz,
+					k,
+					omega,
+					rsd,
+					tv,
+					d,
+					a,
+					b,
+					c,
+					ist,
+					iend,
+					jst,
+					jend,
+					nx0,
+					ny0);
+			if(timeron){timer_stop(T_BUTS);}
+		}
+		/*
+		 * ---------------------------------------------------------------------
+		 * update the variables
+		 * ---------------------------------------------------------------------
+		 */
+		if(timeron){timer_start(T_ADD);}
+		for(k=1; k<nz-1; k++){
+			for(j=jst; j<jend; j++){
+				for(i=ist; i<iend; i++){
+					for(m=0; m<5; m++){
+						u[k][j][i][m]=u[k][j][i][m]+tmp*rsd[k][j][i][m];
+					}
+				}
+			}
+		}
+		if(timeron){timer_stop(T_ADD);}
+		/*
+		 * ---------------------------------------------------------------------
+		 * compute the max-norms of newton iteration corrections
+		 * ---------------------------------------------------------------------
+		 */
+		if((istep%inorm)==0){
+			if(timeron){timer_start(T_L2NORM);}
+			l2norm(	nx0,
+					ny0,
+					nz0,
+					ist,
+					iend,
+					jst,
+					jend,
+					rsd,
+					delunm);
+			if(timeron){timer_stop(T_L2NORM);}
+		}
 		/*
 		 * ---------------------------------------------------------------------
 		 * compute the steady-state residuals
 		 * ---------------------------------------------------------------------
-	 	*/
+		 */
 		rhs();
-
 		/*
 		 * ---------------------------------------------------------------------
-		 * compute the L2 norms of newton iteration residuals
+		 * compute the max-norms of newton iteration residuals
 		 * ---------------------------------------------------------------------
 		 */
-		l2norm(	nx0,
-				ny0,
-				nz0,
-				ist,
-				iend,
-				jst,
-				jend,
-				rsd,
-				rsdnm);
-	} /* end parallel */
-
-
-	for(i=1;i<=T_LAST;i++){timer_clear(i);}
-	timer_start(1);
-	
-	#pragma omp parallel private(istep,i,j,k,m)
-	{
-		/*
-		 * ---------------------------------------------------------------------
-		 * the timestep loop
-		 * ---------------------------------------------------------------------
-		 */
-		for(istep=1; istep<=niter; istep++){
-			if((istep%20)==0||istep==itmax||istep==1){
-				#pragma omp master
-					if(niter>1){printf(" Time step %4d\n",istep);}
-			}
-			/*
-			 * ---------------------------------------------------------------------
-			 * perform SSOR iteration
-			 * ---------------------------------------------------------------------
-			 */
-			if(timeron){
-				#pragma omp master
-					timer_start(T_RHS);
-			}
-			#pragma omp for
-			for(k=1; k<nz-1; k++){
-				for(j=jst; j<jend; j++){
-					for(i=ist; i<iend; i++){
-						for(m=0; m<5; m++){
-							rsd[k][j][i][m]=dt*rsd[k][j][i][m];
-						}
-					}
-				}
-			}
-			if(timeron){
-				#pragma omp master
-					timer_stop(T_RHS);
-			}
-
-			for(k=1; k<nz-1; k++){
-				/*
-				 * ---------------------------------------------------------------------
-				 * form the lower triangular part of the jacobian matrix
-				 * ---------------------------------------------------------------------
-				 */
-				if(timeron){
-					#pragma omp master
-						timer_start(T_JACLD);
-				}
-				jacld(k);
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_JACLD);
-				}
-
-				/*
-				 * ---------------------------------------------------------------------
-				 * perform the lower triangular solution
-				 * ---------------------------------------------------------------------
-				 */
-				if(timeron){
-					#pragma omp master
-						timer_start(T_BLTS);
-				}
-				
-				blts(	nx,
-						ny,
-						nz,
-						k,
-						omega,
-						rsd,
-						a,
-						b,
-						c,
-						d,
-						ist,
-						iend,
-						jst,
-						jend,
-						nx0,
-						ny0);
-
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_BLTS);
-				}
-			}
-
-			#pragma omp barrier
-
-			for(k=nz-2; k>0; k--){
-				/*
-				 * ---------------------------------------------------------------------
-				 * form the strictly upper triangular part of the jacobian matrix
-				 * ---------------------------------------------------------------------
-				 */
-				if(timeron){
-					#pragma omp master
-						timer_start(T_JACU);
-				}
-				jacu(k);
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_JACU);
-				}
-				/*
-				 * ---------------------------------------------------------------------
-				 * perform the upper triangular solution
-				 * ---------------------------------------------------------------------
-				 */
-				if(timeron){
-					#pragma omp master
-						timer_start(T_BUTS);
-				}
-
-				buts(	nx,
-						ny,
-						nz,
-						k,
-						omega,
-						rsd,
-						tv,
-						d,
-						a,
-						b,
-						c,
-						ist,
-						iend,
-						jst,
-						jend,
-						nx0,
-						ny0);
-
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_BUTS);
-				}
-			}
-			
-			#pragma omp barrier
-
-			/*
-			 * ---------------------------------------------------------------------
-			 * update the variables
-			 * ---------------------------------------------------------------------
-			 */
-			if(timeron){
-				#pragma omp master
-					timer_start(T_ADD);
-			}
-
-			#pragma omp for
-			for(k=1; k<nz-1; k++){
-				for(j=jst; j<jend; j++){
-					for(i=ist; i<iend; i++){
-						for(m=0; m<5; m++){
-							u[k][j][i][m]=u[k][j][i][m]+tmp*rsd[k][j][i][m];
-						}
-					}
-				}
-			}
-			if(timeron){
-				#pragma omp master
-					timer_stop(T_ADD);
-			}
-			/*
-			 * ---------------------------------------------------------------------
-			 * compute the max-norms of newton iteration corrections
-			 * ---------------------------------------------------------------------
-			 */
-
-			if((istep%inorm)==0){
-				if(timeron){
-					#pragma omp master
-						timer_start(T_L2NORM);
-				}
-				l2norm(	nx0,
-						ny0,
-						nz0,
-						ist,
-						iend,
-						jst,
-						jend,
-						rsd,
-						delunm);
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_L2NORM);
-				}
-			}
-			/*
-			 * ---------------------------------------------------------------------
-			 * compute the steady-state residuals
-			 * ---------------------------------------------------------------------
-			 */
-			rhs();
-
-			/*
-			 * ---------------------------------------------------------------------
-			 * compute the max-norms of newton iteration residuals
-			 * ---------------------------------------------------------------------
-			 */
-			if(((istep%inorm)==0)||( istep == itmax)){
-				if(timeron){
-					#pragma omp master
-						timer_start(T_L2NORM);
-				}
-				l2norm(	nx0,
-						ny0,
-						nz0,
-						ist,
-						iend,
-						jst,
-						jend,
-						rsd,
-						rsdnm);
-				if(timeron){
-					#pragma omp master
-						timer_stop(T_L2NORM);
-				}
-			}
-			/*
-			 * ---------------------------------------------------------------------
-			 * check the newton-iteration residuals against the tolerance levels
-			 * ---------------------------------------------------------------------
-			 */
-			if((rsdnm[0]<tolrsd[0])&&
-					(rsdnm[1]<tolrsd[1])&&
-					(rsdnm[2]<tolrsd[2])&&
-					(rsdnm[3]<tolrsd[3])&&
-					(rsdnm[4]<tolrsd[4])){
-				#pragma omp master
-					printf(" \n convergence was achieved after %4d pseudo-time steps\n",istep);
-				break;
-			}
+		if(((istep%inorm)==0)||( istep == itmax)){
+			if(timeron){timer_start(T_L2NORM);}
+			l2norm(	nx0,
+					ny0,
+					nz0,
+					ist,
+					iend,
+					jst,
+					jend,
+					rsd,
+					rsdnm);
+			if(timeron){timer_stop(T_L2NORM);}
 		}
-	} /* end parallel */
-
+		/*
+		 * ---------------------------------------------------------------------
+		 * check the newton-iteration residuals against the tolerance levels
+		 * ---------------------------------------------------------------------
+		 */
+		if((rsdnm[0]<tolrsd[0])&&
+				(rsdnm[1]<tolrsd[1])&&
+				(rsdnm[2]<tolrsd[2])&&
+				(rsdnm[3]<tolrsd[3])&&
+				(rsdnm[4]<tolrsd[4])){
+			printf(" \n convergence was achieved after %4d pseudo-time steps\n",istep);
+			break;
+		}
+	}
 	timer_stop(1);
 	maxtime=timer_read(1);
 }

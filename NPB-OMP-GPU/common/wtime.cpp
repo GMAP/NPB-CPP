@@ -39,7 +39,7 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-*/
+*/ 
 
 #include "wtime.hpp"
 #include <sys/time.h>

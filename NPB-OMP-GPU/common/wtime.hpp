@@ -39,7 +39,7 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-*/
+*/ 
 
 /* 
  * C/Fortran interface is different on different machines. 

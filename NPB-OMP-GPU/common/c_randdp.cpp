@@ -39,7 +39,7 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
-*/
+*/ 
 
 #if defined(USE_POW)
 #define r23 pow(0.5, 23.0)
@@ -77,7 +77,6 @@ Authors of the C++ code:
  * 
  * ---------------------------------------------------------------------
  */
-#pragma omp declare target
 double randlc(double *x, double a){    
 	double t1,t2,t3,t4,a1,a2,x1,x2,z;
 
@@ -174,4 +173,3 @@ void vranlc(int n, double *x_seed, double a, double y[]){
 	}
 	*x_seed = x;
 }
-#pragma omp end declare target
