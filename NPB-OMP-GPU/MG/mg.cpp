@@ -903,12 +903,17 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 #endif
 
 	int i3, i2, i1;
-	double u1[M], u2[M];
+	
 
 	if(timeron){timer_start(T_RESID);}
-	for(i3 = 1; i3 < n3-1; i3++){
-		for(i2 = 1; i2 < n2-1; i2++){
-			for(i1 = 0; i1 < n1; i1++){
+
+    #pragma omp target enter data map(to: r[:n3][1:n2][1:n1])
+  {
+    #pragma omp target teams distribute parallel for collapse(2) schedule(dynamic) map(to: u[:n3][:n2][:n1], v[:n3][:n2][:n1], a[:4])
+	for(int i3 = 1; i3 < n3-1; i3++){
+		for(int i2 = 1; i2 < n2-1; i2++){
+          double u1[M], u2[M];
+			for(int i1 = 0; i1 < n1; i1++){
 				u1[i1] = u[i3][i2-1][i1] + u[i3][i2+1][i1]
 					+ u[i3-1][i2][i1] + u[i3+1][i2][i1];
 				u2[i1] = u[i3-1][i2-1][i1] + u[i3-1][i2+1][i1]
@@ -930,6 +935,8 @@ static void resid(void* pointer_u, void* pointer_v, void* pointer_r, int n1, int
 			}
 		}
 	}
+  }
+      #pragma omp target exit data map(from: r[:n3][1:n2][1:n1])
 	if(timeron){timer_stop(T_RESID);}
 
 	/*
