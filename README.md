@@ -13,7 +13,7 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
 
 
     ===================================================================
-      NAS Parallel Benchmarks in C++ using OpenMP, FastFlow and Intel TBB
+      NAS Parallel Benchmarks in C++ using OpenMP, FastFlow, Intel TBB, and C++ parallel STL algorithms.
 
         This project was conducted in the Parallel Applications
         Modelling Group (GMAP) at PUCRS - Brazil.
@@ -48,6 +48,8 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
 **NPB-TBB** - This directory contains the parallel version implemented with Threading Building Blocks.
 
 **NPB-FF** - This directory contains the parallel version implemented with FastFlow.
+
+**NPB-PSTL** - This directory contains the parallel version implemented with C++ parallel STL algorithms.
 
 # The Five Kernels and Three Pseudo-applications
 

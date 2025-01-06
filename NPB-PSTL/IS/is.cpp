@@ -28,6 +28,8 @@ Authors of the C++ code:
 	Dalvan Griebler <dalvangriebler@gmail.com>
 	Gabriell Araujo <hexenoften@gmail.com>
  	Júnior Löff <loffjh@gmail.com>
+	Arthur S. Bianchessi <arthur.bianchessi@edu.pucrs.br>
+	Leonardo Mallmann <leonardo.mallmann@edu.pucrs.br>
 */
 
 

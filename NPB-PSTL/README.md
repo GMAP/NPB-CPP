@@ -25,6 +25,8 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
             Dalvan Griebler (PUCRS)
             Gabriell Araujo (PUCRS)
             Júnior Löff (PUCRS)
+            Arthur S. Bianchessi (PUCRS)
+            Leonardo Mallmann (PUCRS)
 
       In case of questions or problems, please send an e-mail to us:	
         dalvan.griebler@acad.pucrs.br
