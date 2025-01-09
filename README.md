@@ -18,8 +18,9 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
         This project was conducted in the Parallel Applications
         Modelling Group (GMAP) at PUCRS - Brazil.
 
-        GMAP Research Group leader:
-            Luiz Gustavo Leão Fernandes
+        GMAP Research Group leaders:
+            Luiz Gustavo Leão Fernandes (PUCRS)
+	    Dalvan Griebler (PUCRS)
 
         Code contributors: 
             Dalvan Griebler (PUCRS)
