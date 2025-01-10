@@ -309,7 +309,6 @@ int main(int argc, char *argv[]){
 
 	setup(&n1,&n2,&n3,k);
 
-	// zero3(u,n1,n2,n3);
 	std::fill(u.begin(), u.end(), 0.0);
 	zran3(v,n1,n2,n3,nx[lt],ny[lt],k);
 

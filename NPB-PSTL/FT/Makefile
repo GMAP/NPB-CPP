@@ -5,7 +5,7 @@ BENCHMARKU=FT
 include ../config/make.def
 
 OBJS = ${BENCHMARK}${VERSION}.o ${COMMON}/c_${RAND}.o ${COMMON}/c_print_results.o \
-       ${COMMON}/c_timers.o ${COMMON}/c_wtime.o #../omp-prof.o
+       ${COMMON}/c_timers.o ${COMMON}/c_wtime.o
 
 include ../sys/make.common
 

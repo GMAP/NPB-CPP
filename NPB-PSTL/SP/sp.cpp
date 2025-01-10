@@ -1748,8 +1748,7 @@ void set_constants(){
  * ---------------------------------------------------------------------
  */
 void txinvr(){
-// 	int ku4, ku4_const=(JMAXP+1)*(IMAXP+1)*5, ku3, ku3_const=(IMAXP+1)*5, ku2;
-//   int ks3, ks3_const=(JMAXP+1)*(IMAXP+1), ks2;
+
 	if(timeron){timer_start(T_TXINVR);}
 	std::for_each_n(policy, iter.front()+1, nz2, [&](int k){
 		double t1, t2, t3, ac, ru1, uu, vv, ww, r1, r2, r3, r4, r5, ac2inv;
@@ -1794,8 +1793,7 @@ void txinvr(){
  * ---------------------------------------------------------------------
  */
 void tzetar(){
-// 	int ku4, ku4_const=(JMAXP+1)*(IMAXP+1)*5, ku3, ku3_const=(IMAXP+1)*5, ku2;
-//   int ks3, ks3_const=(JMAXP+1)*(IMAXP+1), ks2;
+
   if(timeron){timer_start(T_TZETAR);}
 	std::for_each_n(policy, iter.front()+1, nz2, [&](int k){
 		double t1, t2, t3, ac, xvel, yvel, zvel, r1, r2, r3, r4, r5, btuz, ac2u, uzik1;

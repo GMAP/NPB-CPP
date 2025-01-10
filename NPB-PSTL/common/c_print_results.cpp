@@ -146,16 +146,6 @@ void c_print_results(std::string name,
 	evalue = getenv("MP_SET_NUMTHREADS");
 	printf("   MULTICPUS = %s\n", evalue);
 #endif    
-	/* 
-	 * printf(" Please send the results of this run to:\n\n");
-	 * printf(" NPB Development Team\n");
-	 * printf(" Internet: npb@nas.nasa.gov\n \n");
-	 * printf(" If email is not available, send this to:\n\n");
-	 * printf(" MS T27A-1\n");
-	 * printf(" NASA Ames Research Center\n");
-	 * printf(" Moffett Field, CA  94035-1000\n\n");
-	 * printf(" Fax: 650-604-3957\n\n");
-	 */
 	std::cout << "\n\n";
 	
 	std::cout << "----------------------------------------------------------------------\n";

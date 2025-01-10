@@ -569,9 +569,6 @@ void rank(int iteration){
 		int kx2;
 		INT_TYPE i, k, j;
 		std::vector<INT_TYPE> bucket_ptrs_worker(NUM_BUCKETS);
-		// INT_TYPE* work_buff = &bucket_size[myid*NUM_BUCKETS];
-		// int start = (int)(NUM_KEYS*(myid/num_procs));
-		// int end   = (int)(NUM_KEYS*((myid+1)/num_procs));
 
 		/* Accumulative bucket sizes are the bucket pointers. */
 		/* These are global sizes accumulated upon to each bucket */
