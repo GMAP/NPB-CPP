@@ -18,14 +18,15 @@ The conventions we used in our porting can be found [here](notes-conventions.md)
         This project was conducted in the Parallel Applications
         Modelling Group (GMAP) at PUCRS - Brazil.
 
-        GMAP Research Group leaders:
-            Luiz Gustavo Leão Fernandes (PUCRS)
-	    Dalvan Griebler (PUCRS)
+        GMAP Research Group leader:
+            Luiz Gustavo Leão Fernandes
 
         Code contributors: 
             Dalvan Griebler (PUCRS)
             Gabriell Araujo (PUCRS)
             Júnior Löff (PUCRS)
+            Arthur S. Bianchessi (PUCRS)
+            Leonardo Mallmann (PUCRS)
 
       In case of questions or problems, please send an e-mail to us:	
         dalvan.griebler@acad.pucrs.br
@@ -58,17 +59,17 @@ Each directory is independent and contains its own implemented version of the ke
 
 ## Kernels
 
-	EP - Embarrassingly Parallel, floating-point operation capacity
-	MG - Multi-Grid, non-local memory accesses, short- and long-distance communication
-	CG - Conjugate Gradient, irregular memory accesses and communication
-	FT - discrete 3D fast Fourier Transform, intensive long-distance communication
-	IS - Integer Sort, integer computation and communication
+  EP - Embarrassingly Parallel, floating-point operation capacity
+  MG - Multi-Grid, non-local memory accesses, short- and long-distance communication
+  CG - Conjugate Gradient, irregular memory accesses and communication
+  FT - discrete 3D fast Fourier Transform, intensive long-distance communication
+  IS - Integer Sort, integer computation and communication
 
 ## Pseudo-applications
 
-	BT - Block Tri-diagonal solver
-	SP - Scalar Penta-diagonal solver
-	LU - Lower-Upper Gauss-Seidel solver
+  BT - Block Tri-diagonal solver
+  SP - Scalar Penta-diagonal solver
+  LU - Lower-Upper Gauss-Seidel solver
 
 *Tip: The pseudo-applications' performance is bounded to the sequential partial differential equation (PDE) solver*
 
@@ -83,15 +84,15 @@ Enter the directory from the version desired and execute:
 `$ make _BENCHMARK CLASS=_WORKLOAD`
 
 _BENCHMARKs are: 
-		
-	EP, CG, MG, IS, FT, BT, SP and LU 
-																										
+    
+  EP, CG, MG, IS, FT, BT, SP and LU 
+                                                    
 _WORKLOADs are: 
-	
-	Class S: small for quick test purposes
-	Class W: workstation size (a 90's workstation; now likely too small)	
-	Classes A, B, C: standard test problems; ~4X size increase going from one class to the next	
-	Classes D, E, F: large test problems; ~16X size increase from each of the previous Classes  
+  
+  Class S: small for quick test purposes
+  Class W: workstation size (a 90's workstation; now likely too small)	
+  Classes A, B, C: standard test problems; ~4X size increase going from one class to the next	
+  Classes D, E, F: large test problems; ~16X size increase from each of the previous Classes  
 
 
 Command example:
@@ -103,7 +104,7 @@ Command example:
 Binaries are generated inside the bin folder
 
 Command example:
-	
+  
 `$ ./bin/ep.A`
 
 # Compiler and Parallel Configurations
@@ -130,7 +131,7 @@ This command will generate a folder inside `libs/tbb-2020.1/build`. Finally, you
 The degree of parallelism can be set using the `*RUNTIME*_NUM_THREADS` environment variable.
 
 Command example:
-		
+    
 `$ export OMP_NUM_THREADS=32`
 or
 `TBB_NUM_THREADS` and `FF_NUM_THREADS`
