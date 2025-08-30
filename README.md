@@ -8,7 +8,7 @@ The NPB's Fortran codes were carefully ported to **C++** and are fully compliant
   
 [[DOI]](https://doi.org/10.1016/j.future.2021.07.021) J. Löff, D. Griebler, G. Mencagli et al., **The NAS Parallel Benchmarks for evaluating C++ parallel programming frameworks on shared-memory architectures**, *Future Generation Computer Systems (FGCS)* (2021)
 
-[[DOI]](https://doi.org/10.1016/) J. Löff; R. B. Hoffmann; A. S. Bianchessi; L. Mallmann; D. Griebler; W. Binder. **NPB-PSTL: C++ STL Algorithms with Parallel Execution Policies in NAS Parallel Benchmarks**. In: 2025 33st Euromicro International Conference on Parallel, Distributed and NetworkBased Processing (PDP), 2025, Turim, Italy.
+[[DOI]](https://doi.org/10.1109/PDP66500.2025.00030) J. Löff; R. B. Hoffmann; A. S. Bianchessi; L. Mallmann; D. Griebler; W. Binder. **NPB-PSTL: C++ STL Algorithms with Parallel Execution Policies in NAS Parallel Benchmarks**. In: 2025 33st Euromicro International Conference on Parallel, Distributed and NetworkBased Processing (PDP), 2025, Turim, Italy.
 
 *This is a repository aimed at providing parallel codes with different C++ parallel programming APIs for the NAS Parallel Benchmarks (NPB). You can also contribute with this project, writing issues and pull requests.*
 
